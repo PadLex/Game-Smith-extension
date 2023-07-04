@@ -1,0 +1,48 @@
+{
+  "name": "ludii",
+  "displayName": "Ludii",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.79.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "ludii",
+        "aliases": [
+          "Ludii",
+          "ludii"
+        ],
+        "extensions": [
+          ".lud",
+          ".def"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "ludii",
+        "scopeName": "source.ludii",
+        "path": "./syntaxes/ludii.tmLanguage.json"
+      }
+    ],
+    "configurationDefaults": {
+      "editor.wordWrap": "on"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^18.15.1",
+    "@types/vscode": "^1.79.1"
+  },
+  "main": "./out/extension.js",
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  }
+}
