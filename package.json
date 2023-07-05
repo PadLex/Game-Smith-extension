@@ -44,5 +44,8 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./"
+  },
+  "dependencies": {
+    "@gradio/client": "^0.1.4"
   }
 }
