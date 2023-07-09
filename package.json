@@ -33,7 +33,47 @@
     ],
     "configurationDefaults": {
       "editor.wordWrap": "on"
-    }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ludii",
+          "title": "Ludii",
+          "icon": "resources/package-explorer.svg"
+        }
+      ]
+    },
+    "views": {
+			"ludii": [
+				{
+					"type": "webview",
+					"id": "ludii.colorsView",
+					"name": "Calico Colors"
+				}
+			]
+		},
+		"commands": [
+			{
+				"command": "ludii.addColor",
+				"category": "Ludii",
+				"title": "Add Color"
+			},
+			{
+				"command": "ludii.clearColors",
+				"category": "Ludii",
+				"title": "Clear Colors",
+				"icon": "$(clear-all)"
+			}
+		],
+		"menus": {
+			"view/title": [
+				{
+					"command": "ludii.clearColors",
+					"group": "navigation",
+					"when": "view == ludii.colorsView"
+				}
+			]
+		}
   },
   "devDependencies": {
     "@types/node": "^18.15.1",
