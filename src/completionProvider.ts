@@ -1,45 +1,27 @@
-import * as vscode from 'vscode';
 const https = require('https');
 import { JavaController } from './javaController';
-import { getGame, getComments } from './utils';
 
-export class LudiiPredictionProvider implements vscode.InlineCompletionItemProvider {
+export type Completion = {value: string, score: number, compiles: boolean};
+
+export class LLMCompletionProvider {
 
     private compiler = new LudiiCompiler();
 
-    public provideInlineCompletionItems(
-        document: vscode.TextDocument, position: vscode.Position, context: vscode.InlineCompletionContext, token: vscode.CancellationToken
-    ): vscode.ProviderResult<vscode.InlineCompletionItem[]> {
+    public async findCompletions(english: string, ludii: string, completionHandler: (completions: Completion[]) => void): Promise<void> {
+        console.log("English: ", english);
+        console.log("Ludii: ", ludii);
         
-        return new Promise((resolve, reject) => {
-            console.log(context.triggerKind);
-            if (context.triggerKind == 1)
-                return resolve([]);
+        const inferences = await this.infer("Construct a Ludii game based on the following description", english, ludii);
+        let completions = [];
+        for (let completion of inferences) {
+            console.log("PREDICTION: ", completion);
+            completions.push({value: completion, score: completion.length, compiles: false});
+            //compiled.push(await this.compiler.compile(game + completion));
+            console.log("COMPILED: ", completions[completions.length - 1]);
+        }
 
-            const game = getGame(document.getText());
-            console.log("PROVIDING INLINE COMPLETION ITEMS", game);
-            
-            const comments = getComments(document.getText());
-            console.log("COMMENTS: ", comments);
-            this.infer("Construct a Ludii game based on the following description", comments, game).then(async (completions: [string]) => {
-                
-                let compiled = [];
-                for (let completion of completions) {
-                    console.log("PREDICTION: ", completion);
-                    compiled.push({"partial": game + completion, "score": completion.length});
-                    //compiled.push(await this.compiler.compile(game + completion));
-                    console.log("COMPILED: ", compiled[compiled.length - 1]);
-                }
-
-                compiled.sort((a, b) => b.score - a.score);             
-                resolve(compiled.map(compiled => new vscode.InlineCompletionItem(compiled.partial.substring(game.length))));
-            }).catch((error: any) => {
-                console.log(error);
-                reject([]);
-            });
-            
-            
-        });
+        completions.sort((a, b) => b.score - a.score);             
+        completionHandler(completions);
     }
 
     public async infer(instruction: string, input: string, partial: string): Promise<[string]> {
@@ -108,5 +90,21 @@ export class LudiiCompiler {
             compilableSection = await this.javaController.read();
             resolve({compiles: compiles, score: score, partial: compilableSection});
         });
+    }
+}
+
+export class FakeCompletionProvider {
+    async findCompletions(english: string, ludii: string, completionHandler: (completions: Completion[]) => void): Promise<void> {
+        console.log("English: ", english);
+        console.log("Ludii: ", ludii);
+        
+        let completions = [
+            {value: " hello world", score: 0, compiles: false},
+            {value: " sure sure sure", score: 0, compiles: false},
+            {value: " YUP", score: 0.1, compiles: true}
+        ];
+
+        completions.sort((a, b) => b.score - a.score);             
+        completionHandler(completions);
     }
 }

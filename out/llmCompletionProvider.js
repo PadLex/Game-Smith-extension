@@ -1,13 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LudiiCompiler = exports.LLMCompletionProvider = void 0;
+exports.FakeCompletionProvider = exports.LudiiCompiler = exports.LLMCompletionProvider = void 0;
 const https = require('https');
 const javaController_1 = require("./javaController");
 class LLMCompletionProvider {
     constructor() {
         this.compiler = new LudiiCompiler();
     }
-    async getCompletions(english, ludii, completionHandler) {
+    async findCompletions(english, ludii, completionHandler) {
         console.log("English: ", english);
         console.log("Ludii: ", ludii);
         const inferences = await this.infer("Construct a Ludii game based on the following description", english, ludii);
@@ -75,4 +75,18 @@ class LudiiCompiler {
     }
 }
 exports.LudiiCompiler = LudiiCompiler;
-//# sourceMappingURL=inlinePredict.js.map
+class FakeCompletionProvider {
+    async findCompletions(english, ludii, completionHandler) {
+        console.log("English: ", english);
+        console.log("Ludii: ", ludii);
+        let completions = [
+            { value: " hello world", score: 0, compiles: false },
+            { value: " sure sure sure", score: 0, compiles: false },
+            { value: " YUP", score: 0.1, compiles: true }
+        ];
+        completions.sort((a, b) => b.score - a.score);
+        completionHandler(completions);
+    }
+}
+exports.FakeCompletionProvider = FakeCompletionProvider;
+//# sourceMappingURL=llmCompletionProvider.js.map

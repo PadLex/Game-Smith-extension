@@ -1,10 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ColorsViewProvider = void 0;
+exports.CompletionViewProvider = void 0;
 const vscode = require("vscode");
-class ColorsViewProvider {
+const completionProvider_1 = require("./completionProvider");
+const utils_1 = require("./utils");
+class CompletionViewProvider {
     constructor(_extensionUri) {
         this._extensionUri = _extensionUri;
+        this.completionProvider = new completionProvider_1.FakeCompletionProvider();
+        console.log("View provider created");
     }
     resolveWebviewView(webviewView, context, _token) {
         this._view = webviewView;
@@ -18,7 +22,7 @@ class ColorsViewProvider {
         webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
         webviewView.webview.onDidReceiveMessage(data => {
             switch (data.type) {
-                case 'colorSelected':
+                case 'CompletionSelected':
                     {
                         vscode.window.activeTextEditor?.insertSnippet(new vscode.SnippetString(`#${data.value}`));
                         break;
@@ -26,15 +30,18 @@ class ColorsViewProvider {
             }
         });
     }
-    addColor() {
+    findCompletions() {
         if (this._view) {
-            this._view.show?.(true); // `show` is not implemented in 1.49 but is for 1.50 insiders
-            this._view.webview.postMessage({ type: 'addColor' });
+            this._view.show(true);
+            const text = vscode.window.activeTextEditor?.document.getText() || '';
+            this.completionProvider.findCompletions((0, utils_1.getComments)(text), (0, utils_1.getGame)(text), completins => {
+                this._view?.webview.postMessage({ type: 'setCompletions', value: completins });
+            });
         }
     }
-    clearColors() {
+    clearCompletions() {
         if (this._view) {
-            this._view.webview.postMessage({ type: 'clearColors' });
+            this._view.webview.postMessage({ type: 'setCompletions' });
         }
     }
     _getHtmlForWebview(webview) {
@@ -67,18 +74,16 @@ class ColorsViewProvider {
 				<title>Cat Colors</title>
 			</head>
 			<body>
-				<ul class="color-list">
+				<ul class="completion-list">
 				</ul>
-
-				<button class="add-color-button">Add Color</button>
 
 				<script nonce="${nonce}" src="${scriptUri}"></script>
 			</body>
 			</html>`;
     }
 }
-exports.ColorsViewProvider = ColorsViewProvider;
-ColorsViewProvider.viewType = 'ludii.colorsView';
+exports.CompletionViewProvider = CompletionViewProvider;
+CompletionViewProvider.viewType = 'ludii.completionsView';
 function getNonce() {
     let text = '';
     const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

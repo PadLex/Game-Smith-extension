@@ -2,28 +2,26 @@ body {
 	background-color: transparent;
 }
 
-.color-list {
+.completion-list {
 	list-style: none;
 	padding: 0;
 }
 
-.color-entry {
+.completion-entry {
 	width: 100%;
 	display: flex;
 	margin-bottom: 0.4em;
 	border: 1px solid var(--vscode-input-border);
 }
 
-.color-preview {
+.completion-score {
 	width: 2em;
 	height: 2em;
+	line-height: 2em;
+	/* color: var(--vscode-errorForeground); */
 }
 
-.color-preview:hover {
-	outline: inset white;
-}
-
-.color-input {
+.completion-input {
 	display: block;
 	flex: 1;
 	width: 100%;
@@ -31,10 +29,4 @@ body {
 	background-color: var(--vscode-input-background);
 	border: none;
 	padding: 0 0.6em;
-}
-
-.add-color-button {
-	display: block;
-	border: none;
-	margin: 0 auto;
 }

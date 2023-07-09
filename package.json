@@ -35,11 +35,11 @@
       "editor.wordWrap": "on"
     },
     "viewsContainers": {
-      "activitybar": [
+      "panel": [
         {
           "id": "ludii",
           "title": "Ludii",
-          "icon": "resources/package-explorer.svg"
+          "icon": "media/ludii_logo.png"
         }
       ]
     },
@@ -47,30 +47,36 @@
 			"ludii": [
 				{
 					"type": "webview",
-					"id": "ludii.colorsView",
-					"name": "Calico Colors"
+					"id": "ludii.completionsView",
+					"name": "LLM Completions"
 				}
 			]
 		},
 		"commands": [
 			{
-				"command": "ludii.addColor",
+				"command": "ludii.findCompletions",
 				"category": "Ludii",
-				"title": "Add Color"
+				"title": "Find Completions",
+				"icon": "$(run)"
 			},
 			{
-				"command": "ludii.clearColors",
+				"command": "ludii.clearCompletions",
 				"category": "Ludii",
-				"title": "Clear Colors",
+				"title": "Clear Completions",
 				"icon": "$(clear-all)"
 			}
 		],
 		"menus": {
 			"view/title": [
-				{
-					"command": "ludii.clearColors",
+        {
+					"command": "ludii.findCompletions",
 					"group": "navigation",
-					"when": "view == ludii.colorsView"
+					"when": "view == ludii.completionsView"
+				},
+				{
+					"command": "ludii.clearCompletions",
+					"group": "navigation",
+					"when": "view == ludii.completionsView"
 				}
 			]
 		}

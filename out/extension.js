@@ -16,13 +16,14 @@ function activate(context) {
     //     { language: 'ludii', scheme: 'file' },
     //     ludiiPredictionProvider
     // ));
-    const provider = new ui_1.ColorsViewProvider(context.extensionUri);
-    context.subscriptions.push(vscode.window.registerWebviewViewProvider(ui_1.ColorsViewProvider.viewType, provider));
-    context.subscriptions.push(vscode.commands.registerCommand('ludii.addColor', () => {
-        provider.addColor();
+    const provider = new ui_1.CompletionViewProvider(context.extensionUri);
+    context.subscriptions.push(vscode.window.registerWebviewViewProvider(ui_1.CompletionViewProvider.viewType, provider));
+    context.subscriptions.push(vscode.commands.registerCommand('ludii.findCompletions', () => {
+        console.log("findCompletions");
+        provider.findCompletions();
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('ludii.clearColors', () => {
-        provider.clearColors();
+    context.subscriptions.push(vscode.commands.registerCommand('ludii.clearCompletions', () => {
+        provider.clearCompletions();
     }));
 }
 exports.activate = activate;

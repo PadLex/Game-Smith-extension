@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { disposeControllers } from './javaController';
 import { LudiiAutocomplete } from './autocomplete';
-import { LudiiPredictionProvider } from './inlinePredict';
-import { ColorsViewProvider }from './ui';
+import { LLMCompletionProvider } from './completionProvider';
+import { CompletionViewProvider }from './ui';
 
 // const ludiiCompletionItemProvider = new LudiiAutocomplete();
 // const ludiiPredictionProvider = new LudiiPredictionProvider();
@@ -21,19 +21,20 @@ export function activate(context: vscode.ExtensionContext) {
     // ));
 
 
-    const provider = new ColorsViewProvider(context.extensionUri);
+    const provider = new CompletionViewProvider(context.extensionUri);
 
 	context.subscriptions.push(
-		vscode.window.registerWebviewViewProvider(ColorsViewProvider.viewType, provider));
+		vscode.window.registerWebviewViewProvider(CompletionViewProvider.viewType, provider));
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand('ludii.addColor', () => {
-			provider.addColor();
+		vscode.commands.registerCommand('ludii.findCompletions', () => {
+            console.log("findCompletions");
+			provider.findCompletions();
 		}));
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand('ludii.clearColors', () => {
-			provider.clearColors();
+		vscode.commands.registerCommand('ludii.clearCompletions', () => {
+			provider.clearCompletions();
 		}));
 
 

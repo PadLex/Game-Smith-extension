@@ -1,14 +1,18 @@
 import * as vscode from 'vscode';
+import { LLMCompletionProvider, FakeCompletionProvider } from './completionProvider';
+import { getGame, getComments } from './utils';
 
-export class ColorsViewProvider implements vscode.WebviewViewProvider {
+export class CompletionViewProvider implements vscode.WebviewViewProvider {
 
-	public static readonly viewType = 'ludii.colorsView';
+	public static readonly viewType = 'ludii.completionsView';
 
 	private _view?: vscode.WebviewView;
 
+	private completionProvider = new FakeCompletionProvider();
+
 	constructor(
 		private readonly _extensionUri: vscode.Uri,
-	) { }
+	) {console.log("View provider created");}
 
 	public resolveWebviewView(
 		webviewView: vscode.WebviewView,
@@ -30,7 +34,7 @@ export class ColorsViewProvider implements vscode.WebviewViewProvider {
 
 		webviewView.webview.onDidReceiveMessage(data => {
 			switch (data.type) {
-				case 'colorSelected':
+				case 'CompletionSelected':
 					{
 						vscode.window.activeTextEditor?.insertSnippet(new vscode.SnippetString(`#${data.value}`));
 						break;
@@ -39,16 +43,21 @@ export class ColorsViewProvider implements vscode.WebviewViewProvider {
 		});
 	}
 
-	public addColor() {
+	public findCompletions() {
 		if (this._view) {
-			this._view.show?.(true); // `show` is not implemented in 1.49 but is for 1.50 insiders
-			this._view.webview.postMessage({ type: 'addColor' });
+			this._view.show(true);
+			const text = vscode.window.activeTextEditor?.document.getText() || '';
+
+			this.completionProvider.findCompletions(getComments(text), getGame(text), completins => {
+				this._view?.webview.postMessage({ type: 'setCompletions', value: completins });
+			});
+			
 		}
 	}
 
-	public clearColors() {
+	public clearCompletions() {
 		if (this._view) {
-			this._view.webview.postMessage({ type: 'clearColors' });
+			this._view.webview.postMessage({ type: 'setCompletions' });
 		}
 	}
 
@@ -85,10 +94,8 @@ export class ColorsViewProvider implements vscode.WebviewViewProvider {
 				<title>Cat Colors</title>
 			</head>
 			<body>
-				<ul class="color-list">
+				<ul class="completion-list">
 				</ul>
-
-				<button class="add-color-button">Add Color</button>
 
 				<script nonce="${nonce}" src="${scriptUri}"></script>
 			</body>
