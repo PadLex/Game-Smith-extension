@@ -1,80 +1,69 @@
 import * as vscode from 'vscode';
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
-//import { client } from "@gradio/client";
-
-class testClient {
-    public async predict(endpoint: string, args: any[]): Promise<any> {
-        return new Promise((resolve, reject) => {
-            resolve([
-                {
-                    "value": "(game \"Hex\" (players 2) (equipment { (board (hex Diamond 11)) (piece \"Marker\" Each) (regions P1 {(sites Side NE) (sites Side SW)}) (regions P2 {(sites Side NW) (sites Side SE)})}) (rules (meta (swap)) (play (move Add (to (sites Empty)))) (end (if (is Connected Mover) (result Mover Win)))))"
-                }
-            ]);
-        });
-    }
-}
-
+const https = require('https');
 
 export class LudiiPredictionProvider implements vscode.InlineCompletionItemProvider {
-    private gradioClient: any;
-    private model = "earthshine-nondecorative-2023-06-27-17-40-07";
-    private template = "alpaca";
-
-    constructor() {
-        //client("https://7d55bed0b056f62d56.gradio.live/").then(gradioClient => this.gradioClient = gradioClient);
-        this.gradioClient = new testClient();
-    }
 
     public provideInlineCompletionItems(
         document: vscode.TextDocument, position: vscode.Position, context: vscode.InlineCompletionContext, token: vscode.CancellationToken
     ): vscode.ProviderResult<vscode.InlineCompletionItem[]> {
+        
         return new Promise((resolve, reject) => {
+            console.log(context.triggerKind);
+            if (context.triggerKind == 1)
+                return resolve([]);
+
             const game = getGame(document.getText());
             console.log("PROVIDING INLINE COMPLETION ITEMS", game);
-
-            if (game.length == 0) {
-                const comments = getComments(document.getText());
-                console.log("COMMENTS: ", comments);
-                this.infer("Construct a Ludii game based on the following description", comments).then((prediction: string) => {
-                    console.log("PREDICTION: ", prediction);
-                    const completion = new vscode.InlineCompletionItem(prediction);
-                    resolve([completion]);
-                }).catch((error: any) => {
-                    console.log(error);
-                    reject([]);
-                });
-            }
+            
+            const comments = getComments(document.getText());
+            console.log("COMMENTS: ", comments);
+            this.infer("Construct a Ludii game based on the following description", comments, game).then((completions: [string]) => {
+                console.log("PREDICTIONS: ", completions);                
+                resolve(completions.map(completion => new vscode.InlineCompletionItem(completion)));
+            }).catch((error: any) => {
+                console.log(error);
+                reject([]);
+            });
+            
             
         });
     }
 
-    public async infer(instruction: string, input: string): Promise<string> {
-        const result = await this.gradioClient.predict(
-            "/inference", 
-            [
-                this.model,	// str representing Option from: [] in 'LoRA Model' Dropdown component
-                this.template,	// str representing Option from: [] in 'Prompt Template' Dropdown component
-                instruction,	// str representing string value in 'Prompt' Textbox component
-                input,	// str representing string value in '' Textbox component
-                "",	// str representing string value in '' Textbox component
-                "",	// str representing string value in '' Textbox component
-                "",	// str representing string value in '' Textbox component
-                "",	// str representing string value in '' Textbox component
-                "",	// str representing string value in '' Textbox component
-                "",	// str representing string value in '' Textbox component
-                0,	// int | float representing numeric value between 0 and 2 in 'Temperature' Slider component
-                0.75,	// int | float representing numeric value between 0 and 1 in 'Top P' Slider component
-                40,	// int | float representing numeric value between 0 and 100 in 'Top K' Slider component
-                2,	// int | float representing numeric value between 1 and 5 in 'Beams' Slider component
-                1.2,	// int | float representing numeric value between 0 and 2.5 in 'Repetition Penalty' Slider component
-                10,	// int | float representing numeric value between 0 and 4096 in 'Max New Tokens' Slider component
-                false,	// bool representing boolean value in 'Stream Output' Checkbox component
-                false	// bool representing boolean value in 'Show Raw' Checkbox component
-            ]
-        );
+    public async infer(instruction: string, input: string, partial: string): Promise<[string]> {
+        const url = new URL('https://f915-34-124-202-59.ngrok.io');
 
-        return result[0]['value'];
+        url.searchParams.append('instruction', instruction);
+        url.searchParams.append('input', input);
+        url.searchParams.append('partial', partial);
+        url.searchParams.append('temperature', "0.5");
+        url.searchParams.append('max_new_tokens', "100");
+        url.searchParams.append('n', "5");
+
+        return new Promise((resolve, reject) => {
+            // wait 1 second
+            //setTimeout(() => { resolve("test") }, 2000);
+
+            https.get(url.href, (res: any) => {
+                let data = '';
+
+                // A chunk of data has been received.
+                res.on('data', (chunk: Buffer) => {
+                    data += chunk;
+                });
+
+                // The whole response has been received.
+                res.on('end', () => {
+                    resolve(JSON.parse(data).completions);
+                });
+
+            }).on("error", (err: Error) => {
+                console.log("Error: " + err.message);
+                reject(err);
+            });
+        });
     }
+
 
     public dispose() {
         // TODO
@@ -98,63 +87,49 @@ function getComments(text: string): string {
     return commentContents;
 }
 
-
-export class LudiiCompletionItemProvider implements vscode.CompletionItemProvider {
+let activeControllers: JavaController[] = []
+export class JavaController {
     private javaProcess: ChildProcessWithoutNullStreams;
     private keepAlive: boolean = true;
+    private lock = false;
 
-
-    constructor() {
-        this.javaProcess = this.spawnJavaProcess('approaches.symbolic.api.Autocomplete');
+    constructor(javaClass: string) {
+        this.javaProcess = this.spawnJavaProcess(javaClass);
+        activeControllers.push(this);
     }
 
-    public provideCompletionItems(
-        document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext
-    ): Thenable<vscode.CompletionItem[]> {
+    public write(text: string) {
+        console.log('\nPROVIDING:', text);
+        if (this.lock) throw "Can not write bacause the previous read operation is ongoing."; //TODO check if lock is necessary
+        this.javaProcess.stdin.write(text + '\n');
+    }
 
-        return new Promise((resolve, reject) => {
-            let completionItems: vscode.CompletionItem[] = [];
+    public read(dataHandler: ((text: string) => void), errorHandler: (data: any) => void) {
+        this.lock = true;
+        let result = '';
+        this.javaProcess.stdout.on('data', (data: Buffer) => {
+            console.log('PARTIAL: ', data.at(data.length - 1));
+            const dataString = data.toString();
+            result += dataString;
+            if (dataString.endsWith('\n')) { // TODO check if I broke something because it was '||\n'
+                console.log('SUCCESS: ' + dataString);
+                dataHandler(result.substring(0, result.length - 1));
+                this.lock = false;
+            }
 
-            let docText = document.getText(new vscode.Range(new vscode.Position(0, 0), position));
+            // Clen-up
+            this.javaProcess.stdout.removeListener('data', dataHandler);
+            this.javaProcess.stderr.removeListener('error', errorHandler);
+        });
 
-            const text = getGame(docText);
-            console.log('\nPROVIDING:', text);
+        this.javaProcess.stderr.on('error', (data: any) => {
+            this.lock = false;
 
-            this.javaProcess.stdin.write(text + '\n');
-            
-            let result = '';
-            const dataHandler = (data: Buffer) => {
-                console.log('PARTIAL: ', data.at(data.length - 1));
-                const dataString = data.toString();
-                result += dataString;
-                if (dataString.endsWith('||\n')) {
-                    result = result.substring(0, result.length - 3);
-                    console.log('SUCCESS: ' + result);
-                    const completions = result.split('||');
-                    
-                    completions.forEach((completion: string) => {
-                        const [label, detail] = completion.split('|');
-                        console.log(completion, "->", label, "&", detail);
-                        const item = new vscode.CompletionItem(label);
-                        item.detail = detail;
-                        completionItems.push(item);
-                    });
+            // Clen-up
+            this.javaProcess.stdout.removeListener('data', dataHandler);
+            this.javaProcess.stderr.removeListener('error', errorHandler);
 
-                    this.javaProcess.stdout.removeListener('data', dataHandler);
-                    this.javaProcess.stderr.removeListener('error', errorHandler);
-                    resolve(completionItems);
-                }
-            };
-
-            const errorHandler = (data: any) => {
-                console.log('FAILED: ' + data.toString());
-                this.javaProcess.stdout.removeListener('data', dataHandler);
-                this.javaProcess.stderr.removeListener('error', errorHandler);
-                reject([]);
-            };
-
-            this.javaProcess.stdout.on('data', dataHandler);
-            this.javaProcess.stderr.on('error', errorHandler);
+            errorHandler(data);
         });
     }
 
@@ -190,18 +165,97 @@ export class LudiiCompletionItemProvider implements vscode.CompletionItemProvide
     }
 }
 
+export class LudiiAutocomplete implements vscode.CompletionItemProvider {
+    private javaController = new JavaController('approaches.symbolic.api.Autocomplete');
 
-const ludiiCompletionItemProvider = new LudiiCompletionItemProvider();
+    public provideCompletionItems(
+        document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext
+    ): Thenable<vscode.CompletionItem[]> {
+
+        return new Promise((resolve, reject) => {
+            let completionItems: vscode.CompletionItem[] = [];
+
+            let docText = document.getText(new vscode.Range(new vscode.Position(0, 0), position));
+
+            this.javaController.write(getGame(docText));
+            
+            const dataHandler = (text: string) => {
+
+                text = text.substring(0, text.length - 2);
+                const completions = text.split('||');
+                
+                completions.forEach((completion: string) => {
+                    const [label, detail] = completion.split('|');
+                    console.log(completion, "->", label, "&", detail);
+                    const item = new vscode.CompletionItem(label);
+                    item.detail = detail;
+                    completionItems.push(item);
+                });
+
+                resolve(completionItems);
+            };
+
+            const errorHandler = (data: any) => {
+                console.log('FAILED: ' + data.toString());
+                reject([]);
+            };
+
+            this.javaController.read(dataHandler, errorHandler);
+        });
+    }
+}
+
+export class LudiiCompiler {
+    private javaController = new JavaController('approaches.symbolic.api.Compile');
+
+    public compile(game: string): Promise<[boolean, string]> {
+
+        return new Promise((resolve, reject) => {
+            this.javaController.write(game);
+
+            let compiles: boolean;
+            let compilableSection: string;
+
+            const errorHandler = (data: any) => {
+                console.log('FAILED: ' + data.toString());
+                reject([]);
+            };
+
+            this.javaController.read(text => compiles = parseInt(text) == 1, errorHandler);
+            this.javaController.read(text => compilableSection = text, errorHandler);
+        });
+    }
+}
+
+export class LudiiEvaluater {
+    private javaController = new JavaController('approaches.symbolic.api.Evaluate');
+
+    public evaluate(game: string): Promise<number> {
+
+        return new Promise((resolve, reject) => {
+            this.javaController.write(game);
+
+            const errorHandler = (data: any) => {
+                console.log('FAILED: ' + data.toString());
+                reject([]);
+            };
+
+            this.javaController.read(text => resolve(parseFloat(text)), errorHandler);
+        });
+    }
+}
+
+
+const ludiiCompletionItemProvider = new LudiiAutocomplete();
 const ludiiPredictionProvider = new LudiiPredictionProvider();
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('Ludii started');
 
-
-    context.subscriptions.push(vscode.languages.registerCompletionItemProvider(
-        { language: 'ludii', scheme: 'file' },
-        ludiiCompletionItemProvider
-    ));
+    // context.subscriptions.push(vscode.languages.registerCompletionItemProvider(
+    //     { language: 'ludii', scheme: 'file' },
+    //     ludiiCompletionItemProvider
+    // ));
 
     context.subscriptions.push(vscode.languages.registerInlineCompletionItemProvider(
         { language: 'ludii', scheme: 'file' },
@@ -210,5 +264,5 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-    ludiiCompletionItemProvider.dispose();
+    activeControllers.forEach(controller => controller.dispose())
 }

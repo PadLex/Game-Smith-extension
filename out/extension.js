@@ -1,67 +1,54 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deactivate = exports.activate = exports.LudiiCompletionItemProvider = exports.LudiiPredictionProvider = void 0;
+exports.deactivate = exports.activate = exports.LudiiEvaluater = exports.LudiiCompiler = exports.LudiiAutocomplete = exports.JavaController = exports.LudiiPredictionProvider = void 0;
 const vscode = require("vscode");
 const child_process_1 = require("child_process");
-//import { client } from "@gradio/client";
-class testClient {
-    async predict(endpoint, args) {
-        return new Promise((resolve, reject) => {
-            resolve([
-                {
-                    "value": "(game \"Hex\" (players 2) (equipment { (board (hex Diamond 11)) (piece \"Marker\" Each) (regions P1 {(sites Side NE) (sites Side SW)}) (regions P2 {(sites Side NW) (sites Side SE)})}) (rules (meta (swap)) (play (move Add (to (sites Empty)))) (end (if (is Connected Mover) (result Mover Win)))))"
-                }
-            ]);
-        });
-    }
-}
+const https = require('https');
 class LudiiPredictionProvider {
-    constructor() {
-        this.model = "earthshine-nondecorative-2023-06-27-17-40-07";
-        this.template = "alpaca";
-        //client("https://7d55bed0b056f62d56.gradio.live/").then(gradioClient => this.gradioClient = gradioClient);
-        this.gradioClient = new testClient();
-    }
     provideInlineCompletionItems(document, position, context, token) {
         return new Promise((resolve, reject) => {
+            console.log(context.triggerKind);
+            if (context.triggerKind == 1)
+                return resolve([]);
             const game = getGame(document.getText());
             console.log("PROVIDING INLINE COMPLETION ITEMS", game);
-            if (game.length == 0) {
-                const comments = getComments(document.getText());
-                console.log("COMMENTS: ", comments);
-                this.infer("Construct a Ludii game based on the following description", comments).then((prediction) => {
-                    console.log("PREDICTION: ", prediction);
-                    const completion = new vscode.InlineCompletionItem(prediction);
-                    resolve([completion]);
-                }).catch((error) => {
-                    console.log(error);
-                    reject([]);
-                });
-            }
+            const comments = getComments(document.getText());
+            console.log("COMMENTS: ", comments);
+            this.infer("Construct a Ludii game based on the following description", comments, game).then((completions) => {
+                console.log("PREDICTIONS: ", completions);
+                resolve(completions.map(completion => new vscode.InlineCompletionItem(completion)));
+            }).catch((error) => {
+                console.log(error);
+                reject([]);
+            });
         });
     }
-    async infer(instruction, input) {
-        const result = await this.gradioClient.predict("/inference", [
-            this.model,
-            this.template,
-            instruction,
-            input,
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            0,
-            0.75,
-            40,
-            2,
-            1.2,
-            10,
-            false,
-            false // bool representing boolean value in 'Show Raw' Checkbox component
-        ]);
-        return result[0]['value'];
+    async infer(instruction, input, partial) {
+        const url = new URL('https://f915-34-124-202-59.ngrok.io');
+        url.searchParams.append('instruction', instruction);
+        url.searchParams.append('input', input);
+        url.searchParams.append('partial', partial);
+        url.searchParams.append('temperature', "0.5");
+        url.searchParams.append('max_new_tokens', "100");
+        url.searchParams.append('n', "5");
+        return new Promise((resolve, reject) => {
+            // wait 1 second
+            //setTimeout(() => { resolve("test") }, 2000);
+            https.get(url.href, (res) => {
+                let data = '';
+                // A chunk of data has been received.
+                res.on('data', (chunk) => {
+                    data += chunk;
+                });
+                // The whole response has been received.
+                res.on('end', () => {
+                    resolve(JSON.parse(data).completions);
+                });
+            }).on("error", (err) => {
+                console.log("Error: " + err.message);
+                reject(err);
+            });
+        });
     }
     dispose() {
         // TODO
@@ -82,47 +69,42 @@ function getComments(text) {
     }
     return commentContents;
 }
-class LudiiCompletionItemProvider {
-    constructor() {
+let activeControllers = [];
+class JavaController {
+    constructor(javaClass) {
         this.keepAlive = true;
-        this.javaProcess = this.spawnJavaProcess('approaches.symbolic.api.Autocomplete');
+        this.lock = false;
+        this.javaProcess = this.spawnJavaProcess(javaClass);
+        activeControllers.push(this);
     }
-    provideCompletionItems(document, position, token, context) {
-        return new Promise((resolve, reject) => {
-            let completionItems = [];
-            let docText = document.getText(new vscode.Range(new vscode.Position(0, 0), position));
-            const text = getGame(docText);
-            console.log('\nPROVIDING:', text);
-            this.javaProcess.stdin.write(text + '\n');
-            let result = '';
-            const dataHandler = (data) => {
-                console.log('PARTIAL: ', data.at(data.length - 1));
-                const dataString = data.toString();
-                result += dataString;
-                if (dataString.endsWith('||\n')) {
-                    result = result.substring(0, result.length - 3);
-                    console.log('SUCCESS: ' + result);
-                    const completions = result.split('||');
-                    completions.forEach((completion) => {
-                        const [label, detail] = completion.split('|');
-                        console.log(completion, "->", label, "&", detail);
-                        const item = new vscode.CompletionItem(label);
-                        item.detail = detail;
-                        completionItems.push(item);
-                    });
-                    this.javaProcess.stdout.removeListener('data', dataHandler);
-                    this.javaProcess.stderr.removeListener('error', errorHandler);
-                    resolve(completionItems);
-                }
-            };
-            const errorHandler = (data) => {
-                console.log('FAILED: ' + data.toString());
-                this.javaProcess.stdout.removeListener('data', dataHandler);
-                this.javaProcess.stderr.removeListener('error', errorHandler);
-                reject([]);
-            };
-            this.javaProcess.stdout.on('data', dataHandler);
-            this.javaProcess.stderr.on('error', errorHandler);
+    write(text) {
+        console.log('\nPROVIDING:', text);
+        if (this.lock)
+            throw "Can not write bacause the previous read operation is ongoing."; //TODO check if lock is necessary
+        this.javaProcess.stdin.write(text + '\n');
+    }
+    read(dataHandler, errorHandler) {
+        this.lock = true;
+        let result = '';
+        this.javaProcess.stdout.on('data', (data) => {
+            console.log('PARTIAL: ', data.at(data.length - 1));
+            const dataString = data.toString();
+            result += dataString;
+            if (dataString.endsWith('\n')) { // TODO check if I broke something because it was '||\n'
+                console.log('SUCCESS: ' + dataString);
+                dataHandler(result.substring(0, result.length - 1));
+                this.lock = false;
+            }
+            // Clen-up
+            this.javaProcess.stdout.removeListener('data', dataHandler);
+            this.javaProcess.stderr.removeListener('error', errorHandler);
+        });
+        this.javaProcess.stderr.on('error', (data) => {
+            this.lock = false;
+            // Clen-up
+            this.javaProcess.stdout.removeListener('data', dataHandler);
+            this.javaProcess.stderr.removeListener('error', errorHandler);
+            errorHandler(data);
         });
     }
     spawnJavaProcess(javaClass) {
@@ -151,17 +133,85 @@ class LudiiCompletionItemProvider {
         this.javaProcess.kill();
     }
 }
-exports.LudiiCompletionItemProvider = LudiiCompletionItemProvider;
-const ludiiCompletionItemProvider = new LudiiCompletionItemProvider();
+exports.JavaController = JavaController;
+class LudiiAutocomplete {
+    constructor() {
+        this.javaController = new JavaController('approaches.symbolic.api.Autocomplete');
+    }
+    provideCompletionItems(document, position, token, context) {
+        return new Promise((resolve, reject) => {
+            let completionItems = [];
+            let docText = document.getText(new vscode.Range(new vscode.Position(0, 0), position));
+            this.javaController.write(getGame(docText));
+            const dataHandler = (text) => {
+                text = text.substring(0, text.length - 2);
+                const completions = text.split('||');
+                completions.forEach((completion) => {
+                    const [label, detail] = completion.split('|');
+                    console.log(completion, "->", label, "&", detail);
+                    const item = new vscode.CompletionItem(label);
+                    item.detail = detail;
+                    completionItems.push(item);
+                });
+                resolve(completionItems);
+            };
+            const errorHandler = (data) => {
+                console.log('FAILED: ' + data.toString());
+                reject([]);
+            };
+            this.javaController.read(dataHandler, errorHandler);
+        });
+    }
+}
+exports.LudiiAutocomplete = LudiiAutocomplete;
+class LudiiCompiler {
+    constructor() {
+        this.javaController = new JavaController('approaches.symbolic.api.Compile');
+    }
+    compile(game) {
+        return new Promise((resolve, reject) => {
+            this.javaController.write(game);
+            let compiles;
+            let compilableSection;
+            const errorHandler = (data) => {
+                console.log('FAILED: ' + data.toString());
+                reject([]);
+            };
+            this.javaController.read(text => compiles = parseInt(text) == 1, errorHandler);
+            this.javaController.read(text => compilableSection = text, errorHandler);
+        });
+    }
+}
+exports.LudiiCompiler = LudiiCompiler;
+class LudiiEvaluater {
+    constructor() {
+        this.javaController = new JavaController('approaches.symbolic.api.Evaluate');
+    }
+    evaluate(game) {
+        return new Promise((resolve, reject) => {
+            this.javaController.write(game);
+            const errorHandler = (data) => {
+                console.log('FAILED: ' + data.toString());
+                reject([]);
+            };
+            this.javaController.read(text => resolve(parseFloat(text)), errorHandler);
+        });
+    }
+}
+exports.LudiiEvaluater = LudiiEvaluater;
+const ludiiCompletionItemProvider = new LudiiAutocomplete();
 const ludiiPredictionProvider = new LudiiPredictionProvider();
 function activate(context) {
     console.log('Ludii started');
-    context.subscriptions.push(vscode.languages.registerCompletionItemProvider({ language: 'ludii', scheme: 'file' }, ludiiCompletionItemProvider));
+    // context.subscriptions.push(vscode.languages.registerCompletionItemProvider(
+    //     { language: 'ludii', scheme: 'file' },
+    //     ludiiCompletionItemProvider
+    // ));
     context.subscriptions.push(vscode.languages.registerInlineCompletionItemProvider({ language: 'ludii', scheme: 'file' }, ludiiPredictionProvider));
 }
 exports.activate = activate;
 function deactivate() {
-    ludiiCompletionItemProvider.dispose();
+    activeControllers.forEach(controller => controller.dispose());
 }
 exports.deactivate = deactivate;
 //# sourceMappingURL=extension.js.map
