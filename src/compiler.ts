@@ -5,7 +5,7 @@ export class LudiiCompiler {
     private javaController = new JavaController('approaches.symbolic.api.Compile');
 
     public async compile(ludii: string): Promise<Completion> {
-        console.log("\nCompiling: ", ludii);
+        // console.log("\nCompiling: ", ludii);
         
         this.javaController.write(ludii);
 
@@ -17,9 +17,9 @@ export class LudiiCompiler {
         score = parseFloat(await this.javaController.read());
         compilableSection = await this.javaController.read();
 
-        console.log("Compiles: ", compiles);
-        console.log("Score: ", score);
-        console.log("Compilable section: ", compilableSection);
+        // console.log("Compiles: ", compiles);
+        // console.log("Score: ", score);
+        // console.log("Compilable section: ", compilableSection);
 
         return {compiles: compiles, score: score, value: compilableSection};
         

@@ -10,6 +10,8 @@ export class CompletionViewProvider implements vscode.WebviewViewProvider {
 
 	private completionProvider = new LLMCompletionProvider();
 
+	private completionId = 0;
+
 	constructor(
 		private readonly _extensionUri: vscode.Uri,
 	) {console.log("View provider created");}
@@ -47,17 +49,24 @@ export class CompletionViewProvider implements vscode.WebviewViewProvider {
 		if (this._view) {
 			this._view.show(true);
 			const text = vscode.window.activeTextEditor?.document.getText() || '';
+			
+			this.completionId += 1;
+			const completionId = this.completionId;
 
-			this.completionProvider.findCompletions(getComments(text), getGame(text), completins => {
-				this._view?.webview.postMessage({ type: 'setCompletions', value: completins });
-			});
+			this.completionProvider.streamCompletions(getComments(text), getGame(text),
+				completions => {
+					this._view?.webview.postMessage({ type: 'setCompletions', value: completions });
+				},
+				() => completionId != this.completionId
+			);
 			
 		}
 	}
 
 	public clearCompletions() {
 		if (this._view) {
-			this._view.webview.postMessage({ type: 'setCompletions' });
+			this.completionId += 1;
+			this._view.webview.postMessage({ type: 'setCompletions', value: [] });
 		}
 	}
 

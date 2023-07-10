@@ -9,6 +9,7 @@ class CompletionViewProvider {
     static viewType = 'ludii.completionsView';
     _view;
     completionProvider = new completionProvider_1.LLMCompletionProvider();
+    completionId = 0;
     constructor(_extensionUri) {
         this._extensionUri = _extensionUri;
         console.log("View provider created");
@@ -37,14 +38,17 @@ class CompletionViewProvider {
         if (this._view) {
             this._view.show(true);
             const text = vscode.window.activeTextEditor?.document.getText() || '';
-            this.completionProvider.findCompletions((0, utils_1.getComments)(text), (0, utils_1.getGame)(text), completins => {
-                this._view?.webview.postMessage({ type: 'setCompletions', value: completins });
-            });
+            this.completionId += 1;
+            const completionId = this.completionId;
+            this.completionProvider.streamCompletions((0, utils_1.getComments)(text), (0, utils_1.getGame)(text), completions => {
+                this._view?.webview.postMessage({ type: 'setCompletions', value: completions });
+            }, () => completionId != this.completionId);
         }
     }
     clearCompletions() {
         if (this._view) {
-            this._view.webview.postMessage({ type: 'setCompletions' });
+            this.completionId += 1;
+            this._view.webview.postMessage({ type: 'setCompletions', value: [] });
         }
     }
     _getHtmlForWebview(webview) {

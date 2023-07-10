@@ -5,7 +5,7 @@ const javaController_1 = require("./javaController");
 class LudiiCompiler {
     javaController = new javaController_1.JavaController('approaches.symbolic.api.Compile');
     async compile(ludii) {
-        console.log("\nCompiling: ", ludii);
+        // console.log("\nCompiling: ", ludii);
         this.javaController.write(ludii);
         let compiles;
         let score;
@@ -13,9 +13,9 @@ class LudiiCompiler {
         compiles = parseInt(await this.javaController.read()) == 1;
         score = parseFloat(await this.javaController.read());
         compilableSection = await this.javaController.read();
-        console.log("Compiles: ", compiles);
-        console.log("Score: ", score);
-        console.log("Compilable section: ", compilableSection);
+        // console.log("Compiles: ", compiles);
+        // console.log("Score: ", score);
+        // console.log("Compilable section: ", compilableSection);
         return { compiles: compiles, score: score, value: compilableSection };
     }
 }

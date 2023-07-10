@@ -5,22 +5,39 @@ const compiler_1 = require("./compiler");
 const https = require('https');
 class LLMCompletionProvider {
     compiler = new compiler_1.LudiiCompiler();
-    async findCompletions(english, ludii, completionHandler) {
-        console.log("English: ", english);
-        console.log("Ludii: ", ludii);
+    async streamCompletions(english, ludii, completionHandler, interrupted) {
+        // console.log("English: ", english);
+        // console.log("Ludii: ", ludii);
+        if (interrupted())
+            return;
+        let completions = await this.findCompletions(english, ludii);
+        completionHandler(completions);
+        while (!interrupted()) {
+            const bestBroken = completions.find(c => !c.compiles);
+            if (bestBroken == undefined)
+                break;
+            const nextCompletions = await this.findCompletions(english, ludii + bestBroken.value);
+            if (nextCompletions.length == 0)
+                break;
+            completions = completions.filter(c => c != bestBroken);
+            completions.push(...nextCompletions.map(c => { return { compiles: c.compiles, score: c.score, value: bestBroken.value + c.value }; }));
+            completions.sort((a, b) => b.score - a.score);
+            completionHandler(completions);
+        }
+    }
+    async findCompletions(english, ludii) {
         const inferences = await fake_infer("Construct a Ludii game based on the following description", english, compact(ludii));
         let completions = [];
         for (let continuation of inferences) {
-            console.log("PREDICTION: ", continuation);
-            //completions.push({value: completion, score: completion.length, compiles: false});
+            // console.log("PREDICTION: ", continuation);
             const completion = await this.compiler.compile(ludii + continuation);
             completion.value = completion.value.substring(ludii.length);
-            console.log("COMPILED: ", completion);
-            if (completion.value.length > 0)
+            // console.log("COMPILED: ", completion);
+            if (completion.value.length > 0 && completions.find(c => c.value == completion.value) == undefined)
                 completions.push(completion);
         }
         completions.sort((a, b) => b.score - a.score);
-        completionHandler(completions);
+        return completions;
     }
     dispose() {
         // TODO
@@ -53,15 +70,15 @@ async function infer(instruction, input, partial) {
     });
 }
 async function fake_infer(instruction, input, partial) {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 1000));
     const fakes = [
         "(game \"Hex\" (players 2) (equipment { (board (hex Diamond 11)) (piece \"Marker\" Each) (regions P1 {(sites Side NE) (sites Side SW)}) (regions P2 {(sites Side NW) (sites Side SE)})}) (rules (meta (swap)) (play (move Add (to (sites Empty)))) (end (if (is Connected Mover) (result Mover Win)))))",
         "(game \"Hex\" (players 2) (equipment { (board (hex Diamond 11)) (piece \"Marker\" Each)}) (rules (meta (swap)) (play (move Add (to (sites Empty)))) (end (if (is Connected Mover) (result Mover Win)))))",
         "(game \"Hex\" (players 2) (equipment { (board (hex Diamond 11)) (piece \"Marker\" Each) (regions P1 {(sites Side NE) (sites Side SW)}) (regions P2 {(sites Side NW) (sites Side SE)})}) (rules (meta (swap)) (play (move Add (to (sites Fulll)))) (end (if (is Connected Mover) (result Mover Win)))))",
         "(game \"Hex\" (players 2) (equipment { (board (hex Diamond 11)) (piece \"Marker\" Each) (regions P1 {(sites Side NE) (sites Side SW)}) (regions P2 {(sites Side NW) (sites Side SE)})}) (rules (play (move Add (to (sites Empty)))) (end (if (is Connected Mover) (result Mover Win)))))",
     ];
-    console.log("real:", partial);
-    console.log("fake:", fakes[0]);
+    // console.log("real:", partial)
+    // console.log("fake:", fakes[0])
     return fakes.map(f => f.substring(partial.length, partial.length + 50));
 }
 // This is just to match the dataset's formatting. Probably should be updated to match the compiler's formatting.
