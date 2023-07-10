@@ -7,7 +7,7 @@ const utils_1 = require("./utils");
 class CompletionViewProvider {
     constructor(_extensionUri) {
         this._extensionUri = _extensionUri;
-        this.completionProvider = new completionProvider_1.FakeCompletionProvider();
+        this.completionProvider = new completionProvider_1.LLMCompletionProvider();
         console.log("View provider created");
     }
     resolveWebviewView(webviewView, context, _token) {

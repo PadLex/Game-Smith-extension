@@ -7,30 +7,45 @@ class JavaController {
     constructor(javaClass) {
         this.keepAlive = true;
         this.lock = false;
+        this.readQueue = '';
         this.javaProcess = this.spawnJavaProcess(javaClass);
         activeControllers.push(this);
     }
     write(text) {
-        console.log('\nPROVIDING:', text);
         if (this.lock)
-            throw "Can not write bacause the previous read operation is ongoing."; //TODO check if lock is necessary
+            throw "Can not write bacause the previous read operation is ongoing.";
+        // console.log('\nPROVIDING:', text);
         this.javaProcess.stdin.write(text + '\n');
     }
     read() {
+        if (this.lock)
+            throw "Can not read bacause the previous read operation is ongoing.";
+        console.log('\nREAD QUEUE:', this.readQueue);
+        const nextNewLine = this.readQueue.indexOf('\n');
+        if (nextNewLine > -1) {
+            const result = this.readQueue.substring(0, nextNewLine);
+            this.readQueue = this.readQueue.substring(nextNewLine + 1);
+            return Promise.resolve(result);
+        }
         return new Promise((resolve, reject) => {
             this.lock = true;
-            let result = '';
+            let result = this.readQueue;
             const dataHandler = (data) => {
-                console.log('PARTIAL: ', data.toString());
+                console.log('PARTIAL:', data.toString());
                 const dataString = data.toString();
-                result += dataString;
-                if (dataString.endsWith('\n')) { // TODO check if I broke something because it was '||\n'
-                    console.log('SUCCESS: ' + dataString);
+                const nextNewLine = dataString.indexOf('\n');
+                if (nextNewLine > -1) {
+                    if (nextNewLine < dataString.length - 1)
+                        this.readQueue = dataString.substring(nextNewLine + 1);
+                    result += dataString.substring(0, nextNewLine);
                     // Clen-up
                     this.javaProcess.stdout.removeListener('data', dataHandler);
                     this.javaProcess.stderr.removeListener('error', errorHandler);
                     this.lock = false;
-                    resolve(result.substring(0, result.length - 1));
+                    resolve(result);
+                }
+                else {
+                    result += dataString;
                 }
             };
             const errorHandler = (error) => {

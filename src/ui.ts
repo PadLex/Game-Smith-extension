@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { LLMCompletionProvider, FakeCompletionProvider } from './completionProvider';
+import { LLMCompletionProvider } from './completionProvider';
 import { getGame, getComments } from './utils';
 
 export class CompletionViewProvider implements vscode.WebviewViewProvider {
@@ -8,7 +8,7 @@ export class CompletionViewProvider implements vscode.WebviewViewProvider {
 
 	private _view?: vscode.WebviewView;
 
-	private completionProvider = new FakeCompletionProvider();
+	private completionProvider = new LLMCompletionProvider();
 
 	constructor(
 		private readonly _extensionUri: vscode.Uri,
