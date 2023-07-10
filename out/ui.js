@@ -5,9 +5,12 @@ const vscode = require("vscode");
 const completionProvider_1 = require("./completionProvider");
 const utils_1 = require("./utils");
 class CompletionViewProvider {
+    _extensionUri;
+    static viewType = 'ludii.completionsView';
+    _view;
+    completionProvider = new completionProvider_1.LLMCompletionProvider();
     constructor(_extensionUri) {
         this._extensionUri = _extensionUri;
-        this.completionProvider = new completionProvider_1.LLMCompletionProvider();
         console.log("View provider created");
     }
     resolveWebviewView(webviewView, context, _token) {
@@ -83,7 +86,6 @@ class CompletionViewProvider {
     }
 }
 exports.CompletionViewProvider = CompletionViewProvider;
-CompletionViewProvider.viewType = 'ludii.completionsView';
 function getNonce() {
     let text = '';
     const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

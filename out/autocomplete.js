@@ -5,9 +5,7 @@ const vscode = require("vscode");
 const javaController_1 = require("./javaController");
 const utils_1 = require("./utils");
 class LudiiAutocomplete {
-    constructor() {
-        this.javaController = new javaController_1.JavaController('approaches.symbolic.api.Autocomplete');
-    }
+    javaController = new javaController_1.JavaController('approaches.symbolic.api.Autocomplete');
     provideCompletionItems(document, position, token, context) {
         return new Promise((resolve, reject) => {
             let completionItems = [];

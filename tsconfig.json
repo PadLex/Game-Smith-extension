@@ -1,9 +1,9 @@
 {
 	"compilerOptions": {
 		"module": "commonjs",
-		"target": "es2020",
+		"target": "es2022",
         "moduleResolution": "node",
-		"lib": ["es2020", "dom"],
+		"lib": ["es2023", "dom"],
 		"outDir": "out",
 		"sourceMap": true,
 		"strict": true,

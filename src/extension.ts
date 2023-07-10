@@ -10,6 +10,7 @@ import { CompletionViewProvider }from './ui';
 export function activate(context: vscode.ExtensionContext) {
     console.log('Ludii started');
 
+
     // context.subscriptions.push(vscode.languages.registerCompletionItemProvider(
     //     { language: 'ludii', scheme: 'file' },
     //     ludiiCompletionItemProvider

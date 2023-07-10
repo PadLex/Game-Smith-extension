@@ -17,18 +17,18 @@ export class JavaController {
         if (this.lock) throw "Can not write bacause the previous read operation is ongoing.";
         // console.log('\nPROVIDING:', text);
 
-        this.javaProcess.stdin.write(text + '\n');
+        this.javaProcess.stdin.write(text.replaceAll('\n', '\\n') + '\n');
     }
 
     public read(): Promise<string> {
         if (this.lock) throw "Can not read bacause the previous read operation is ongoing.";
-        console.log('\nREAD QUEUE:', this.readQueue);
+        // console.log('\nREAD QUEUE:', this.readQueue);
 
         const nextNewLine = this.readQueue.indexOf('\n');
         if (nextNewLine > -1) {
             const result = this.readQueue.substring(0, nextNewLine);
             this.readQueue = this.readQueue.substring(nextNewLine + 1);
-            return Promise.resolve(result);
+            return Promise.resolve(result.replaceAll('\\n', '\n'));
         }
 
         return new Promise((resolve, reject) => {
@@ -36,7 +36,7 @@ export class JavaController {
             let result = this.readQueue;
 
             const dataHandler = (data: Buffer) => {
-                console.log('PARTIAL:', data.toString());
+                // console.log('PARTIAL:', data.toString());
                 const dataString = data.toString();
                 
                 const nextNewLine = dataString.indexOf('\n');
@@ -51,7 +51,7 @@ export class JavaController {
                     this.javaProcess.stderr.removeListener('error', errorHandler);
                     this.lock = false;
 
-                    resolve(result);
+                    resolve(result.replaceAll('\\n', '\n'));
 
                 } else {
                     result += dataString;

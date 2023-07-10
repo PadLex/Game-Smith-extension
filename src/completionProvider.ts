@@ -1,7 +1,5 @@
+import { Completion, LudiiCompiler } from "./compiler";
 const https = require('https');
-import { JavaController } from './javaController';
-
-export type Completion = {value: string, score: number, compiles: boolean};
 
 export class LLMCompletionProvider {
 
@@ -11,7 +9,7 @@ export class LLMCompletionProvider {
         console.log("English: ", english);
         console.log("Ludii: ", ludii);
         
-        const inferences = await fake_infer("Construct a Ludii game based on the following description", english, ludii);
+        const inferences = await fake_infer("Construct a Ludii game based on the following description", english, compact(ludii));
         let completions: Completion[] = [];
         for (let continuation of inferences) {
             console.log("PREDICTION: ", continuation);
@@ -73,29 +71,13 @@ async function fake_infer(instruction: string, input: string, partial: string): 
         "(game \"Hex\" (players 2) (equipment { (board (hex Diamond 11)) (piece \"Marker\" Each) (regions P1 {(sites Side NE) (sites Side SW)}) (regions P2 {(sites Side NW) (sites Side SE)})}) (rules (meta (swap)) (play (move Add (to (sites Fulll)))) (end (if (is Connected Mover) (result Mover Win)))))",
         "(game \"Hex\" (players 2) (equipment { (board (hex Diamond 11)) (piece \"Marker\" Each) (regions P1 {(sites Side NE) (sites Side SW)}) (regions P2 {(sites Side NW) (sites Side SE)})}) (rules (play (move Add (to (sites Empty)))) (end (if (is Connected Mover) (result Mover Win)))))",
     ]
+    console.log("real:", partial)
+    console.log("fake:", fakes[0])
     return fakes.map(f => f.substring(partial.length, partial.length+50));
 }
 
 
-export class LudiiCompiler {
-    private javaController = new JavaController('approaches.symbolic.api.Compile');
-
-    public compile(game: string): Promise<Completion> {
-
-        console.log("Compiling: ", game);
-
-        return new Promise(async (resolve, reject) => {
-            this.javaController.write(game);
-
-            let compiles: boolean;
-            let score: number;
-            let compilableSection: string;
-
-            compiles = parseInt(await this.javaController.read()) == 1;
-            score = parseFloat(await this.javaController.read());
-            compilableSection = (await this.javaController.read());
-
-            resolve({compiles: compiles, score: score, value: compilableSection});
-        });
-    }
+// This is just to match the dataset's formatting. Probably should be updated to match the compiler's formatting.
+function compact(rawLudii: string): string {
+    return rawLudii.replace(/\s+/g, ' ').replace(/ \)/g, ')').replace(/ \}/g, '}')
 }
