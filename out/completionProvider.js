@@ -1,10 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LLMCompletionProvider = void 0;
+exports.compact = exports.LLMCompletionProvider = void 0;
 const compiler_1 = require("./compiler");
 const https = require('https');
 class LLMCompletionProvider {
+    inferenceURL;
     compiler = new compiler_1.LudiiCompiler();
+    constructor(inferenceURL) {
+        this.inferenceURL = inferenceURL;
+    }
     async streamCompletions(english, ludii, completionHandler, interrupted) {
         // console.log("English: ", english);
         // console.log("Ludii: ", ludii);
@@ -20,13 +24,15 @@ class LLMCompletionProvider {
             if (nextCompletions.length == 0)
                 break;
             completions = completions.filter(c => c != bestBroken);
-            completions.push(...nextCompletions.map(c => { return { compiles: c.compiles, score: c.score, value: bestBroken.value + c.value }; }));
+            completions.push(...nextCompletions.map(c => {
+                return { compiles: c.compiles, score: c.score, value: bestBroken.value + c.value };
+            }));
             completions.sort((a, b) => b.score - a.score);
             completionHandler(completions);
         }
     }
     async findCompletions(english, ludii) {
-        const inferences = await fake_infer("Construct a Ludii game based on the following description", english, compact(ludii));
+        const inferences = await fake_infer("Construct a Ludii game based on the following description", english, legacy_compact(ludii));
         let completions = [];
         for (let continuation of inferences) {
             // console.log("PREDICTION: ", continuation);
@@ -39,36 +45,33 @@ class LLMCompletionProvider {
         completions.sort((a, b) => b.score - a.score);
         return completions;
     }
-    dispose() {
-        // TODO
+    async infer(instruction, input, partial) {
+        const url = new URL(this.inferenceURL);
+        url.searchParams.append('instruction', instruction);
+        url.searchParams.append('input', input);
+        url.searchParams.append('partial', partial);
+        url.searchParams.append('temperature', "0.5");
+        url.searchParams.append('max_new_tokens', "100");
+        url.searchParams.append('n', "5");
+        return new Promise((resolve, reject) => {
+            https.get(url.href, (res) => {
+                let data = '';
+                // A chunk of data has been received.
+                res.on('data', (chunk) => {
+                    data += chunk;
+                });
+                // The whole response has been received.
+                res.on('end', () => {
+                    resolve(JSON.parse(data).completions);
+                });
+            }).on("error", (err) => {
+                console.log("Error: " + err.message);
+                reject(err);
+            });
+        });
     }
 }
 exports.LLMCompletionProvider = LLMCompletionProvider;
-async function infer(instruction, input, partial) {
-    const url = new URL('https://762a-34-125-86-78.ngrok.io');
-    url.searchParams.append('instruction', instruction);
-    url.searchParams.append('input', input);
-    url.searchParams.append('partial', partial);
-    url.searchParams.append('temperature', "0.5");
-    url.searchParams.append('max_new_tokens', "100");
-    url.searchParams.append('n', "5");
-    return new Promise((resolve, reject) => {
-        https.get(url.href, (res) => {
-            let data = '';
-            // A chunk of data has been received.
-            res.on('data', (chunk) => {
-                data += chunk;
-            });
-            // The whole response has been received.
-            res.on('end', () => {
-                resolve(JSON.parse(data).completions);
-            });
-        }).on("error", (err) => {
-            console.log("Error: " + err.message);
-            reject(err);
-        });
-    });
-}
 async function fake_infer(instruction, input, partial) {
     await new Promise(resolve => setTimeout(resolve, 1000));
     const fakes = [
@@ -82,7 +85,12 @@ async function fake_infer(instruction, input, partial) {
     return fakes.map(f => f.substring(partial.length, partial.length + 50));
 }
 // This is just to match the dataset's formatting. Probably should be updated to match the compiler's formatting.
-function compact(rawLudii) {
+function legacy_compact(rawLudii) {
     return rawLudii.replace(/\s+/g, ' ').replace(/ \)/g, ')').replace(/ \}/g, '}');
 }
+// This is how I'll change it after the dataset is updated.
+function compact(rawLudii) {
+    return rawLudii.replace(/\s+/g, ' ').replace(/ \)/g, ')').replace(/ \}/g, '}').replace(/\( /g, '(').replace(/\{ /g, '{');
+}
+exports.compact = compact;
 //# sourceMappingURL=completionProvider.js.map

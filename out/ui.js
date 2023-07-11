@@ -8,8 +8,10 @@ class CompletionViewProvider {
     _extensionUri;
     static viewType = 'ludii.completionsView';
     _view;
-    completionProvider = new completionProvider_1.LLMCompletionProvider();
+    completionProvider = new completionProvider_1.LLMCompletionProvider("");
     completionId = 0;
+    activeGame = "";
+    activeCompletion = { value: '', score: 0, compiles: false };
     constructor(_extensionUri) {
         this._extensionUri = _extensionUri;
         console.log("View provider created");
@@ -24,31 +26,87 @@ class CompletionViewProvider {
             ]
         };
         webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+        const verifyActive = () => {
+            const text = vscode.window.activeTextEditor?.document.getText();
+            if (text == undefined) {
+                // console.log("No active text editor");
+                this._view?.webview.postMessage({ type: 'setState', active: false });
+            }
+            else {
+                const ludii = (0, utils_1.getGame)(text);
+                // console.log("ludii  " + compact(ludii));
+                // console.log("active " + compact(this.activeGame + this.activeCompletion));
+                this._view?.webview.postMessage({ type: 'setState', active: (0, completionProvider_1.compact)(ludii) == (0, completionProvider_1.compact)(this.activeGame + this.activeCompletion.value) });
+            }
+        };
+        vscode.window.onDidChangeActiveTextEditor(verifyActive);
+        // This event is emitted when a text document is changed. This usually happens when the contents of the `TextDocument` are changed.
+        vscode.workspace.onDidChangeTextDocument(event => {
+            if (event.document === vscode.window.activeTextEditor?.document) {
+                verifyActive();
+            }
+        });
         webviewView.webview.onDidReceiveMessage(data => {
+            console.log("Message received: " + data.type);
             switch (data.type) {
-                case 'CompletionSelected':
+                case 'completionClicked':
                     {
-                        vscode.window.activeTextEditor?.insertSnippet(new vscode.SnippetString(`#${data.value}`));
+                        console.log("Completion selected: " + this.activeCompletion.value + " -> " + data.completion.value);
+                        const activeEditor = vscode.window.activeTextEditor;
+                        if (activeEditor) {
+                            // Assuming oldValue is at the end of the document
+                            const doc = activeEditor.document;
+                            const start = doc.positionAt(doc.getText().length - this.activeCompletion.value.length);
+                            const end = doc.positionAt(doc.getText().length);
+                            const range = new vscode.Range(start, end);
+                            if (doc.getText(range) != this.activeCompletion.value) {
+                                this._view?.webview.postMessage({ type: 'setState', active: false });
+                                return;
+                            }
+                            const edit = new vscode.WorkspaceEdit();
+                            edit.delete(doc.uri, range);
+                            vscode.workspace.applyEdit(edit).then(success => {
+                                if (success) {
+                                    // Insert new value only after successful deletion of old value
+                                    this.activeCompletion = data.completion;
+                                    activeEditor.insertSnippet(new vscode.SnippetString(data.completion.value), doc.positionAt(doc.getText().length));
+                                    this._view?.webview.postMessage({ type: 'setState', selectedCompletion: data.completion, active: true });
+                                }
+                            });
+                        }
                         break;
                     }
             }
         });
     }
-    findCompletions() {
+    async findCompletions() {
         if (this._view) {
             this._view.show(true);
             const text = vscode.window.activeTextEditor?.document.getText() || '';
             this.completionId += 1;
             const completionId = this.completionId;
-            this.completionProvider.streamCompletions((0, utils_1.getComments)(text), (0, utils_1.getGame)(text), completions => {
-                this._view?.webview.postMessage({ type: 'setCompletions', value: completions });
+            const english = (0, utils_1.getComments)(text);
+            const ludii = (0, utils_1.getGame)(text);
+            let compiledBase = await this.completionProvider.compiler.compile(ludii);
+            compiledBase.value = "";
+            this.activeCompletion = compiledBase;
+            this._view.webview.postMessage({ type: 'setState', completions: [compiledBase], selectedCompletion: compiledBase, active: true });
+            this.activeGame = ludii;
+            this.activeCompletion = compiledBase;
+            if (completionId != this.completionId)
+                return;
+            this.completionProvider.streamCompletions(english, ludii, completions => {
+                let allCompletions = [compiledBase, ...completions];
+                if (allCompletions.filter(c => c.value == this.activeCompletion.value).length == 0)
+                    allCompletions = [compiledBase, this.activeCompletion, ...completions];
+                this._view?.webview.postMessage({ type: 'setState', completions: allCompletions });
             }, () => completionId != this.completionId);
         }
     }
     clearCompletions() {
         if (this._view) {
             this.completionId += 1;
-            this._view.webview.postMessage({ type: 'setCompletions', value: [] });
+            this._view.webview.postMessage({ type: 'setState', completions: [], selectedCompletion: null, active: false });
         }
     }
     _getHtmlForWebview(webview) {

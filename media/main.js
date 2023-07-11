@@ -6,36 +6,37 @@
     // @ts-ignore
     const vscode = acquireVsCodeApi();
 
-    const oldState = vscode.getState() || { completions: [] };
-
-    /** @type {Array<{ value: string, score: number, compiles: boolean }>} */
-    let completions = oldState.completions;
-
-    updateCompletionsList(completions);
+    const oldState = vscode.getState() || { completions: [], selectedCompletion: null, active: true };
+    updateState(oldState.completions, oldState.selectedCompletion, oldState.active);
 
     // Handle messages sent from the extension to the webview
     window.addEventListener('message', event => {
         const message = event.data; // The json data that the extension sent
         switch (message.type) {
-            case 'setCompletions':
+            case 'setState':
                 {
-                    updateCompletionsList(message.value);
+                    const state = vscode.getState();
+                    const completions = message.completions != undefined? message.completions : state.completions;
+                    const selectedCompletion = message.selectedCompletion != undefined? message.selectedCompletion : state.selectedCompletion;
+                    const active = message.active != undefined? message.active : state.active;
+                    if (completions != oldState.completions || selectedCompletion != oldState.selectedCompletion || active != oldState.active)
+                        updateState(completions, selectedCompletion, active);
                     break;
                 }
-            case 'clearCompletions':
-                {
-                    completions = [];
-                    updateCompletionsList(completions);
-                    break;
-                }
+            default: {
+                console.warn("Unknown message type: " + message.type);
+            }
 
         }
     });
 
     /**
      * @param {Array<{ value: string, score: number, compiles: boolean }>} completions
+     * @param {{ value: string, score: number, compiles: boolean }} selectedCompletion
      */
-    function updateCompletionsList(completions) {
+    function updateState(completions, selectedCompletion, active) {
+        // console.log("updateState:", completions, selectedCompletion);
+
         const ul = document.querySelector('.completion-list');
         if (ul === null || ul === undefined) 
             return;
@@ -55,7 +56,13 @@
             input.className = 'completion-input';
             input.type = 'text';
             input.readOnly = true;
-            input.value = completion.value;
+            input.value = '...' + completion.value;
+
+            if (active) {
+                input.addEventListener('mousedown', () => onCompletionClicked(completion));
+                if (completion.value == selectedCompletion.value)
+                    input.style.border = '1px solid var(--vscode-focusBorder)';
+            }
             
             li.appendChild(input);
 
@@ -63,14 +70,15 @@
         }
 
         // Update the saved state
-        vscode.setState({ completions: completions });
+        vscode.setState({ completions: completions, selectedCompletion: selectedCompletion, active: active });
     }
 
-    /** 
-     * @param {string} completion 
+    /**
+     * @param {{ value: string, score: number, compiles: boolean }} completion
      */
     function onCompletionClicked(completion) {
-        vscode.postMessage({ type: 'completionSelected', value: completion });
+        vscode.postMessage({ type: 'completionClicked', completion: completion});
     }
+
 }());
 
