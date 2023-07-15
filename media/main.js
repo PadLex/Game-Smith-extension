@@ -56,7 +56,7 @@
             input.className = 'completion-input';
             input.type = 'text';
             input.readOnly = true;
-            input.value = '...' + completion.value;
+            input.value = (completion.value.startsWith('//')? '':'...') + completion.value;
 
             if (active) {
                 input.addEventListener('mousedown', () => onCompletionClicked(completion));

@@ -2,18 +2,21 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CompletionViewProvider = void 0;
 const vscode = require("vscode");
-const completionProvider_1 = require("./completionProvider");
+const codeProvider_1 = require("./codeProvider");
 const utils_1 = require("./utils");
 class CompletionViewProvider {
     _extensionUri;
+    codeProvider;
+    descriptionProvider;
     static viewType = 'ludii.completionsView';
     _view;
-    completionProvider = new completionProvider_1.LLMCompletionProvider("");
     completionId = 0;
     activeGame = "";
     activeCompletion = { value: '', score: 0, compiles: false };
-    constructor(_extensionUri) {
+    constructor(_extensionUri, codeProvider, descriptionProvider) {
         this._extensionUri = _extensionUri;
+        this.codeProvider = codeProvider;
+        this.descriptionProvider = descriptionProvider;
         console.log("View provider created");
     }
     resolveWebviewView(webviewView, context, _token) {
@@ -36,7 +39,7 @@ class CompletionViewProvider {
                 const ludii = (0, utils_1.getGame)(text);
                 // console.log("ludii  " + compact(ludii));
                 // console.log("active " + compact(this.activeGame + this.activeCompletion));
-                this._view?.webview.postMessage({ type: 'setState', active: (0, completionProvider_1.compact)(ludii) == (0, completionProvider_1.compact)(this.activeGame + this.activeCompletion.value) });
+                this._view?.webview.postMessage({ type: 'setState', active: (0, codeProvider_1.compact)(ludii) == (0, codeProvider_1.compact)(this.activeGame + this.activeCompletion.value) });
             }
         };
         vscode.window.onDidChangeActiveTextEditor(verifyActive);
@@ -80,28 +83,39 @@ class CompletionViewProvider {
         });
     }
     async findCompletions() {
-        if (this._view) {
-            this._view.show(true);
-            const text = vscode.window.activeTextEditor?.document.getText() || '';
-            this.completionId += 1;
-            const completionId = this.completionId;
-            const english = (0, utils_1.getComments)(text);
-            const ludii = (0, utils_1.getGame)(text);
-            let compiledBase = await this.completionProvider.compiler.compile(ludii);
-            compiledBase.value = "";
-            this.activeCompletion = compiledBase;
-            this._view.webview.postMessage({ type: 'setState', completions: [compiledBase], selectedCompletion: compiledBase, active: true });
-            this.activeGame = ludii;
-            this.activeCompletion = compiledBase;
-            if (completionId != this.completionId)
-                return;
-            this.completionProvider.streamCompletions(english, ludii, completions => {
-                let allCompletions = [compiledBase, ...completions];
-                if (allCompletions.filter(c => c.value == this.activeCompletion.value).length == 0)
-                    allCompletions = [compiledBase, this.activeCompletion, ...completions];
-                this._view?.webview.postMessage({ type: 'setState', completions: allCompletions });
-            }, () => completionId != this.completionId);
-        }
+        if (!this._view)
+            return;
+        this._view.show(true);
+        const text = vscode.window.activeTextEditor?.document.getText() || '';
+        this.completionId += 1;
+        const completionId = this.completionId;
+        const english = (0, utils_1.getComments)(text);
+        const ludii = (0, utils_1.getGame)(text);
+        if (english == "")
+            this.updateDescriptionCompletions(completionId);
+        else
+            this.updateCodeCompletions(english, ludii, completionId);
+    }
+    async updateDescriptionCompletions(completionId) {
+        this.descriptionProvider.streamCompletions(completions => this._view?.webview.postMessage({ type: 'setState', completions: completions }), () => completionId != this.completionId);
+    }
+    async updateCodeCompletions(english, ludii, completionId) {
+        if (!this._view)
+            return;
+        let compiledBase = await this.codeProvider.compiler.compile(ludii);
+        compiledBase.value = "";
+        this.activeCompletion = compiledBase;
+        this._view.webview.postMessage({ type: 'setState', completions: [compiledBase], selectedCompletion: compiledBase, active: true });
+        this.activeGame = ludii;
+        this.activeCompletion = compiledBase;
+        if (completionId != this.completionId)
+            return;
+        this.codeProvider.streamCompletions(english, ludii, completions => {
+            let allCompletions = [compiledBase, ...completions];
+            if (allCompletions.filter(c => c.value == this.activeCompletion.value).length == 0)
+                allCompletions = [compiledBase, this.activeCompletion, ...completions];
+            this._view?.webview.postMessage({ type: 'setState', completions: allCompletions });
+        }, () => completionId != this.completionId);
     }
     clearCompletions() {
         if (this._view) {

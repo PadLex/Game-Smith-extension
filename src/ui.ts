@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { LLMCompletionProvider, compact } from './completionProvider';
+import { CodeProvider, compact } from './codeProvider';
+import { DescriptionProvider } from './descriptionProvider';
 import { getGame, getComments } from './utils';
 import { Completion } from './compiler';
 
@@ -9,8 +10,6 @@ export class CompletionViewProvider implements vscode.WebviewViewProvider {
 
 	private _view?: vscode.WebviewView;
 
-	private completionProvider = new LLMCompletionProvider("");
-
 	private completionId = 0;
 
 	private activeGame = "";
@@ -18,6 +17,8 @@ export class CompletionViewProvider implements vscode.WebviewViewProvider {
 
 	constructor(
 		private readonly _extensionUri: vscode.Uri,
+		private codeProvider: CodeProvider,
+		private descriptionProvider: DescriptionProvider,
 	) {console.log("View provider created");}
 
 	public resolveWebviewView(
@@ -100,36 +101,54 @@ export class CompletionViewProvider implements vscode.WebviewViewProvider {
 	}
 
 	public async findCompletions() {
-		if (this._view) {
-			this._view.show(true);
-			const text = vscode.window.activeTextEditor?.document.getText() || '';
-			
-			this.completionId += 1;
-			const completionId = this.completionId;
+		if (!this._view)
+			return;
 
-			const english = getComments(text);
-			const ludii = getGame(text);
+		this._view.show(true);
+		const text = vscode.window.activeTextEditor?.document.getText() || '';
+		
+		this.completionId += 1;
+		const completionId = this.completionId;
 
-			let compiledBase = await this.completionProvider.compiler.compile(ludii);
-			compiledBase.value = "";
-			this.activeCompletion = compiledBase;
-			this._view.webview.postMessage({ type: 'setState', completions: [compiledBase], selectedCompletion: compiledBase, active: true});
+		const english = getComments(text);
+		const ludii = getGame(text);
 
-			this.activeGame = ludii;
-			this.activeCompletion = compiledBase;
+		if (english == "")
+			this.updateDescriptionCompletions(completionId);
+		else
+			this.updateCodeCompletions(english, ludii, completionId);
+	}
 
-			if (completionId != this.completionId) return;
-			
-			this.completionProvider.streamCompletions(english, ludii,
-				completions => {
-					let allCompletions = [compiledBase, ...completions];
-					if (allCompletions.filter(c => c.value == this.activeCompletion.value).length == 0)
-						allCompletions = [compiledBase, this.activeCompletion, ...completions];
-					this._view?.webview.postMessage({ type: 'setState', completions: allCompletions});
-				},
-				() => completionId != this.completionId
-			);
-		}
+	async updateDescriptionCompletions(completionId: number) {
+		this.descriptionProvider.streamCompletions(
+			completions => this._view?.webview.postMessage({ type: 'setState', completions: completions}),
+			() => completionId != this.completionId
+		);
+	}
+
+	async updateCodeCompletions(english: string, ludii: string, completionId: number) {
+		if (!this._view)
+			return;
+
+		let compiledBase = await this.codeProvider.compiler.compile(ludii);
+		compiledBase.value = "";
+		this.activeCompletion = compiledBase;
+		this._view.webview.postMessage({ type: 'setState', completions: [compiledBase], selectedCompletion: compiledBase, active: true});
+
+		this.activeGame = ludii;
+		this.activeCompletion = compiledBase;
+
+		if (completionId != this.completionId) return;
+		
+		this.codeProvider.streamCompletions(english, ludii,
+			completions => {
+				let allCompletions = [compiledBase, ...completions];
+				if (allCompletions.filter(c => c.value == this.activeCompletion.value).length == 0)
+					allCompletions = [compiledBase, this.activeCompletion, ...completions];
+				this._view?.webview.postMessage({ type: 'setState', completions: allCompletions});
+			},
+			() => completionId != this.completionId
+		);
 	}
 
 	public clearCompletions() {

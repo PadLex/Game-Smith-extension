@@ -44,42 +44,42 @@
       ]
     },
     "views": {
-			"ludii": [
-				{
-					"type": "webview",
-					"id": "ludii.completionsView",
-					"name": "LLM Completions"
-				}
-			]
-		},
-		"commands": [
-			{
-				"command": "ludii.findCompletions",
-				"category": "Ludii",
-				"title": "Find Completions",
-				"icon": "$(run)"
-			},
-			{
-				"command": "ludii.clearCompletions",
-				"category": "Ludii",
-				"title": "Clear Completions",
-				"icon": "$(clear-all)"
-			}
-		],
-		"menus": {
-			"view/title": [
+      "ludii": [
         {
-					"command": "ludii.findCompletions",
-					"group": "navigation",
-					"when": "view == ludii.completionsView"
-				},
-				{
-					"command": "ludii.clearCompletions",
-					"group": "navigation",
-					"when": "view == ludii.completionsView"
-				}
-			]
-		}
+          "type": "webview",
+          "id": "ludii.completionsView",
+          "name": "LLM Completions"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "ludii.findCompletions",
+        "category": "Ludii",
+        "title": "Find Completions",
+        "icon": "$(run)"
+      },
+      {
+        "command": "ludii.clearCompletions",
+        "category": "Ludii",
+        "title": "Clear Completions",
+        "icon": "$(clear-all)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "ludii.findCompletions",
+          "group": "navigation",
+          "when": "view == ludii.completionsView"
+        },
+        {
+          "command": "ludii.clearCompletions",
+          "group": "navigation",
+          "when": "view == ludii.completionsView"
+        }
+      ]
+    }
   },
   "devDependencies": {
     "@types/node": "^18.15.1",
@@ -92,6 +92,6 @@
     "watch": "tsc -watch -p ./"
   },
   "dependencies": {
-    "@gradio/client": "^0.1.4"
+    "openai": "^3.3.0"
   }
 }
