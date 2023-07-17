@@ -1,32 +1,73 @@
 {
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
 	"name": "Ludii",
+	"scopeName": "source.ludii",
 	"patterns": [
-		{
-			"include": "#keywords"
-		},
-		{
-			"include": "#strings"
-		}
-	],
-	"repository": {
-		"keywords": {
-			"patterns": [{
-				"name": "keyword.control.ludii",
-				"match": "\\b(if|while|for|return)\\b"
-			}]
-		},
-		"strings": {
-			"name": "string.quoted.double.ludii",
-			"begin": "\"",
-			"end": "\"",
-			"patterns": [
-				{
-					"name": "constant.character.escape.ludii",
-					"match": "\\\\."
-				}
-			]
-		}
-	},
-	"scopeName": "source.ludii"
+        {
+            "name": "comment.ludii",
+            "match": "\\/\\/.*",
+            "captures": {
+                "0": { "name": "comment.line.double-slash.ludii" }
+            }
+        },
+        {
+            "name": "keyword.control.ludii",
+            "match": "\\b(shift|tiling|prev|wedge|moveAgain|score|path|trim|sizes|merge|state|exp|firstMoveOnTrack|centrePoint|pass|\\%|mancalaBoard|\\*|then|\\+|toBool|\\-|/|size|meta|difference|\\!=|\\<|=|>|sub|deal|dimFunction|handSite|baseRangeFunction|endRule|log10|ahead|forAll|hop|roll|renumber|trackSite|result|remember|promote|min|dual|pot|pow|xor|where|flip|seq|\\^|hand|set|Infinity|decision|spiral|column|union|team|intFunction|face|component|abs|flips|topLevel|makeFaces|baseGraphFunction|to|intervene|die|deck|dim|rules|sites|do|operator|bet|div|payoffs|intersection|layers|tile|subgame|shoot|results|add|Undefined|last|count|notEqual|booleanFunction|avoidStoredState|graph|take|piece|celtic|hint|allCombinations|quadhex|End|region|next|string|attract|regionFunction|remove|random|not|sin|concentric|end|recoordinate|vote|nonDecision|ge|enclose|intersect|apply|rotation|start|was|counter|gt|pair|hole|what|mover|gravity|moves|step|append|play|container|regionSite|select|mod|sqrt|games|hex|floatFunction|id|if|between|phase|item|players|byScore|var|hints|is|priority|propose|push|boardless|surakartaBoard|slide|exact|rotations|card|skew|regions|log|range|fromTo|mapEntry|Off|layer|coord|directional|directionFacing|leap|place|surround|map|regular|max|toFloat|payoff|startRule|trigger|site|equals|le|complete|clip|board|pathExtent|rotate|<=|metaRule|cos|lt|pips|dice|intArrayFunction|float|while|mode|edge|split|pin|rangeFunction|playCard|claim|from|sow|domino|tan|all|swap|level|equipment|tri|arrayValue|basis|square|matchScore|forget|expand|directions|effect|keep|rectangle|>=|who|no|note|game|passEnd|mul|values|trackStep|baseDimFunction|scale|automove|can|dominoes|subdivide|graphFunction|array|and|addScore|splitCrossings|repeat|brick|row|track|value|player|direction|move|toInt|amount|or|cost|satisfy|forEach|custodial|match|int|boolean|poly|nextPhase)\\b",
+            "captures": {
+                "0": { "name": "keyword.control.ludii" }
+            }
+        },
+        {
+            "name": "constant.numeric.ludii",
+            "match": "\\b\\d+\\b",
+            "captures": {
+                "0": { "name": "constant.numeric.ludii" }
+            }
+        },
+        {
+            "name": "string.quoted.double.ludii",
+            "match": "\"[^\"]*\"",
+            "captures": {
+                "0": { "name": "string.quoted.double.ludii" }
+            }
+        },
+        {
+            "name": "variable.parameter.ludii",
+            "match": "\\b(Visited|Left|Repeat|Liberties|Phases|Pass|Hop|Regions|FRRR|Line|Celtic|Related|ConcaveCorners|EndOfTurn|Blocked|Set|D|E|F|FLL|Team10|Team11|Team12|BL|Team13|L|Hexagonal|N|BR|R|S|U|Propose|W|MoveLimit|Players|Path|WNW|Die|Ace|Crash|Diagonals|Columns|Rank|Bet|Tie|Team14|CW|Team15|Team16|Neighbours|Forward|Backwards|Add|Neutral|DE|Start|Regular|Around|DN|DS|DW|ConvexCorners|Placement|Enemy|Simultaneous|Cards|Circle|ToClear|Hand|State|Bottom|Unique|Corners|Dual|ENE|NotOwn|FromBottom|DiceUsed|Six|FL|Outer|FR|UNE|Upward|T31212|Radiating|MoverLastTurn|UNW|FLLL|Deck|Diamond|Spiral|LastTo|Cells|Triggered|NotEnemy|Nine|WSW|DNE|CaterpillarTree|FRR|Values|Remove|DNW|Different|Odd|Board|Hidden|Even|Sides|Distance|Pieces|Leftwards|Square|Sites|Slosh|Top|Alternating|SubGrids|Vertex|DiceEqual|BLL|Draw|In|T488|SpanningTree|Right|Direction|Off|Colour|Side|Axial|Target|SameLayer|Slide|ESE|MovesThisTurn|Style|Threatened|T33434|StartOfTurn|Reflex|Orthogonal|USE|Four|Amount|Obtuse|Layer|Abandon|PyramidalDrop|Leftward|Playable|USW|All|NoBasis|T33344|Concentric|Vertices|Team9|Counter|Team8|Random|Swap|Team7|Team6|Team5|DSE|Team4|Team3|Slash|Morris|Team2|Team1|Cell|LevelFrom|Rightwards|T33336|Player|SquarePyramidal|Occupied|Between|Dominoes|DSW|Crossing|Three|NE|Value|Row|TeamMover|Phase|Horizontal|Symbol|NW|EndSite|Edges|Checkered|Domino|Winning|Rows|Adjacent|P1|Hexagon|P2|TrumpSuit|P3|P4|SSE|RegularGraph|P5|P6|Acute|P7|P8|P9|Scale|Families|Centre|Array|Major|Trials|Diagonal|SSW|Pips|Incident|Edge|Track|Vertical|Each|BRR|Connected|Inner|Farthest|NoShape|Quadrilateral|Positional|OffDiagonal|SidesMatch|AnyDie|Mesh|Sum|Rotational|Two|QuadHex|Pot|SituationalInTurn|NextPlayer|NotEmpty|Group|LeftSite|PositionalInTurn|Suicide|Solid|SE|Star|Backward|Piece|Groups|Limping|T333333_33434|Team|Layers|SW|CentreSite|Wedge|P10|TreeCentre|P12|P11|P14|LineOfSight|P13|P16|P15|Prev|Select|Passed|NonMover|TrumpRank|NNE|Hint|RightSite|Implied|Full|HintRegions|BRRR|Name|UE|Joker|NNW|UN|To|Polygon|TrumpValue|US|UW|Territory|FirstSite|Topsite|SameDirection|Stack|Score|BottomSite|Forwards|Downward|Rhombus|Step|What|T4612|Mover|Empty|Situational|Control|Moves|LineOfPlay|FromTop|Loop|Perimeter|Rotation|T3636|Base|Captures|Five|OppositeDirection|StyleThickness|Within|Decided|Curvature|Support|Var|LargePiece|Ally|Rectangle|Triangle|Check|Suit|Count|Shared|Vote|Proposed|Seven|Cycle|Out|HexagonalPyramidal|Triangular|Next|Angled|Level|Shoot|Site|NoEnd|StepsOnTrack|Rotate|PlayCard|AllSites|Friend|BLLL|LastFrom|Pattern|Touching|Own|Loss|PipsMatch|Custom|Promote|None|Rightward|T3464|Eight|King|Tree|LevelTo|Who|Turns|SidesNoCorners|Queen|Leap|Active|Flat|Prism|Win|LastSite|Steps|Wheel|RememberValue|Cross|Cost|AllDirections|Solved|Move|Column|Jack|Remembered|SupportMultiple|TurnLimit|From|Simulation|Brick|CCW|LegalMoves|Minor|Ten|Pending|Claim)\\b",
+            "captures": {
+                "0": { "name": "variable.parameter.ludii" }
+            }
+        },
+        {
+            "name": "punctuation.definition.ludii",
+            "match": "[\\{\\}\\(\\)]",
+            "captures": {
+                "0": { "name": "punctuation.definition.ludii" }
+            }
+        }
+    ],
+    "repository": {
+        "main": {
+            "patterns": [
+                {
+                    "include": "#comment.ludii"
+                },
+                {
+                    "include": "#keyword.control.ludii"
+                },
+                {
+                    "include": "#constant.numeric.ludii"
+                },
+                {
+                    "include": "#string.quoted.double.ludii"
+                },
+                {
+                    "include": "#variable.parameter.ludii"
+                },
+                {
+                    "include": "#punctuation.definition.ludii"
+                }
+            ]
+        }
+    }
 }
