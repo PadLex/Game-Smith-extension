@@ -64,7 +64,7 @@ class JavaController {
         this.readQueue = '';
     }
     spawnJavaProcess(javaClass) {
-        const projectRoot = '/Users/alex/Documents/Marble/Ludii/';
+        const projectRoot = '/Users/alex/Documents/Marble/Ludii Recommender/';
         const javaPath = [
             'Generation/bin',
             'Common/bin',
@@ -72,16 +72,19 @@ class JavaController {
             'Common/lib/Trove4j_ApacheCommonsRNG.jar',
             'Core/bin',
             'Core/lib/jfreesvg-3.4.jar',
-            'Language/bin'
+            'Language/bin',
+            'Player/bin',
+            'Recommender/bin',
         ].map(module => projectRoot + module).join(':');
-        const javaProcess = (0, child_process_1.spawn)('java', ['-cp', javaPath, javaClass]);
-        javaProcess.on('exit', () => {
+        console.log(javaPath);
+        const javaProcess = (0, child_process_1.spawn)('java', ['-cp', javaPath, javaClass], { cwd: projectRoot });
+        javaProcess.on('exit', (code, signal) => {
             if (this.keepAlive) {
-                console.log('Java process exited. Restarting...');
+                console.log(javaClass + ' exited. with exit code ' + code + ' and signal ' + signal + '. Restarting...');
                 this.javaProcess = this.spawnJavaProcess(javaClass);
             }
         });
-        javaProcess.stdout.once('data', data => console.log('Startup:', data.toString()));
+        javaProcess.stdout.once('data', data => console.log(javaClass + ' startup:', data.toString()));
         return javaProcess;
     }
     dispose() {

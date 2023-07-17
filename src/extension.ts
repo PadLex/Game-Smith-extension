@@ -19,7 +19,6 @@ export function activate(context: vscode.ExtensionContext) {
         ludiiCompletionItemProvider
     ));
 
-
     const provider = new CompletionViewProvider(context.extensionUri, codeProvider, descriptionProvider);
 
 	context.subscriptions.push(
@@ -44,7 +43,6 @@ export function activate(context: vscode.ExtensionContext) {
 			provider.clearCompletions();
 		})
     );
-
 }
 
 export function deactivate() {

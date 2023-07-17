@@ -2,6 +2,7 @@ import { Completion } from "./compiler";
 
 import * as https from 'https';
 import * as vscode from 'vscode';
+import { JavaController } from "./javaController";
 
 const systemMessage = "You are an AI system designed to invent a novel board game inspired by the user's favorite games. Your response will exclusivelly contain a detailed explenation of the mechanics of the novel game. Your explenation will be succinct and follow the same format as the user's.";
 const examples = [
@@ -15,13 +16,8 @@ const examples = [
     }
 ];
 
-const test = [
-    "HexGo: The board begins empty. One player plays as black, the other as white. The black player begins by placing a piece on one of the intersections on the board. Players alternate turns placing a piece on the board. A player may pass at any time. A piece or a group of pieces are captured when they are completely surrounded on all sides on adjacent intersections by the opposing player. Stones cannot be placed to recreate a previous position. The game ends when both players pass consecutively. Players total the number of intersections their pieces occupy or surround. The player with the highest total wins. For more info on this version please google Hexagonal Go.",
-    "Yavalath: Players alternate turns placing pieces on one of the spaces. The first player to place four in a row without first making three in a row wins.",
-    "Nine Men's Morris: Played on a board of three concentric squares, with a line bisecting the perimeters of each square on each side, but not extending inside the perimeter of the central square. Play occurs on the intersections of the lines and the corners of the squares. Each player has nine pieces. Play begins with each player placing pieces on empty points. If they make three in a row along the lines, they can remove one of the opponent's pieces. They cannot remove an opponent's piece that is in a three-in-a-row formation unless there are no other options. Once all pieces are placed, players take turns moving pieces one spot to an adjacent point along the lines. If a player makes three in a row, an opponent's piece is removed as in the first phase of the game. Once a player is reduced to three pieces, that player may move to any open space on the board. The game is won when the opponent is reduced to two pieces."
-];
-
 export class DescriptionProvider {
+    private recommenderAPI = new JavaController('approaches.symbolic.api.Recommender');
     private apiKey: string = "";
     constructor () {}
 
@@ -31,8 +27,9 @@ export class DescriptionProvider {
         for (const example of examples) {
             messages.push({"role": "user", "content": example.favorites.join("\n")});
             messages.push({"role": "assistant", "content": example.response});
-
-        messages.push({"role": "user", "content": test.join("\n")});
+        
+        this.recommenderAPI.write(""); // launch the recommender 
+        messages.push({"role": "user", "content": await this.recommenderAPI.read()});
 
         //messages = [{"role": "system", "content": "You are a helpful assistant."}, {role: "user", content: "Hello world"}];
 
@@ -90,8 +87,8 @@ export class DescriptionProvider {
 
     private async requestAPIKey(): Promise<void> {
         this.apiKey = await vscode.window.showInputBox({
-            placeHolder: "Inference URL",
-            prompt: "Follow the instruction from the Colab notebook to obtain an inference URL.",
+            placeHolder: "API KEy",
+            prompt: "Please enter your OpenAI API key.",
         }) || "";
     }
 
