@@ -3,7 +3,11 @@ import { JavaController } from './javaController';
 import { getGame } from './utils';
 
 export class LudiiAutocomplete implements vscode.CompletionItemProvider {
-    private javaController = new JavaController('approaches.symbolic.api.Autocomplete');
+    private javaController;
+
+    public constructor(private extensionUri: vscode.Uri) {
+        this.javaController = new JavaController('approaches.symbolic.api.Autocomplete', extensionUri);
+    }
 
     public provideCompletionItems(
         document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext

@@ -1,4 +1,6 @@
 import { JavaController } from './javaController';
+import * as vscode from 'vscode';
+
 export type Completion = {value: string, score: number, compiles: boolean};
 
 export interface Compiler {
@@ -6,7 +8,12 @@ export interface Compiler {
 }
 
 export class PartialCompiler implements Compiler {
-    private javaController = new JavaController('approaches.symbolic.api.PartialCompile');
+
+    private javaController;
+
+    public constructor(private extensionUri: vscode.Uri) {
+        this.javaController = new JavaController('approaches.symbolic.api.PartialCompile', extensionUri);
+    }
 
     public async compile(ludii: string): Promise<Completion> {
         // console.log("\nCompiling: ", ludii);
@@ -31,7 +38,11 @@ export class PartialCompiler implements Compiler {
 }
 
 export class LegacyCompiler implements Compiler {
-    private javaController = new JavaController('approaches.symbolic.api.LegacyCompile');
+    private javaController;
+
+    public constructor(private extensionUri: vscode.Uri) {
+        this.javaController = new JavaController('approaches.symbolic.api.LegacyCompile', extensionUri);
+    }
 
     public async compile(ludii: string): Promise<Completion> {
         // console.log("\nCompiling: ", ludii);

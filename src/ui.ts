@@ -113,10 +113,12 @@ export class CompletionViewProvider implements vscode.WebviewViewProvider {
 		const english = getComments(text);
 		const ludii = getGame(text);
 
-		if (english == "")
+		if (english == "" && ludii == "")
 			this.updateDescriptionCompletions(completionId);
-		else
+		else if (english != "")
 			this.updateCodeCompletions(english, ludii, completionId);
+		else
+			vscode.window.showErrorMessage("Could not find any English description in the current file.");
 	}
 
 	async updateDescriptionCompletions(completionId: number) {
@@ -138,6 +140,7 @@ export class CompletionViewProvider implements vscode.WebviewViewProvider {
 		this.activeCompletion = compiledBase;
 
 		if (completionId != this.completionId) return;
+		if (compiledBase.compiles) return;
 		
 		this.codeProvider.streamCompletions(english, ludii,
 			completions => {

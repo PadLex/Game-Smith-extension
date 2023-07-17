@@ -6,9 +6,15 @@ import * as vscode from 'vscode';
 export class CodeProvider {
     public inferenceURL: string = "";
 
-    private legacyCompiler = new LegacyCompiler();
-    private partialCompiler = new PartialCompiler();
-    public compiler: Compiler = this.legacyCompiler;
+    private legacyCompiler;
+    private partialCompiler;
+    public compiler: Compiler;
+
+    public constructor(extensionUri: vscode.Uri) {
+        this.legacyCompiler = new LegacyCompiler(extensionUri);
+        this.partialCompiler = new PartialCompiler(extensionUri);
+        this.compiler = this.legacyCompiler;
+    }
 
     public async streamCompletions(english: string, ludii: string, completionHandler: (completions: Completion[]) => void, interrupted: () => boolean): Promise<void> {
         console.log("English: ", english);
@@ -35,7 +41,7 @@ export class CodeProvider {
             completions.push(...nextCompletions.map(c => {
                 return {compiles: c.compiles, score: c.score, value: bestBroken.value + c.value}
             }));
-            completions.sort((a, b) => b.score - a.score);
+            completions.sort((a, b) => b.score != a.score? b.score - a.score : b.value.length - a.value.length);
             completionHandler(completions);
         }
 
@@ -58,7 +64,7 @@ export class CodeProvider {
                 completions.push(completion);
         }
 
-        completions.sort((a, b) => b.score - a.score);  
+        completions.sort((a, b) => b.score != a.score? b.score - a.score : b.value.length - a.value.length);
         return completions;
     }
 
@@ -72,7 +78,7 @@ export class CodeProvider {
         url.searchParams.append('partial', partial);
         url.searchParams.append('temperature', "0.5");
         url.searchParams.append('max_new_tokens', "50");
-        url.searchParams.append('n', "5");
+        url.searchParams.append('n', "4");
     
         return new Promise((resolve, reject) => {
             https.get(url.href, (res: any) => {

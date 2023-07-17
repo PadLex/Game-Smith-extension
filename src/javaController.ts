@@ -1,4 +1,5 @@
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
+import * as vscode from 'vscode';
 
 let activeControllers: JavaController[] = []
 
@@ -8,8 +9,8 @@ export class JavaController {
     private lock = false;
     private readQueue: string = '';
 
-    constructor(javaClass: string) {
-        this.javaProcess = this.spawnJavaProcess(javaClass);
+    constructor(private javaClass: string, private extensionUri: vscode.Uri) {
+        this.javaProcess = this.spawnJavaProcess();
         activeControllers.push(this);
     }
 
@@ -77,8 +78,10 @@ export class JavaController {
         this.readQueue = '';
     }
 
-    public spawnJavaProcess(javaClass: string): ChildProcessWithoutNullStreams {
-        const projectRoot = '/Users/alex/Documents/Marble/Ludii Recommender/';
+    public spawnJavaProcess(): ChildProcessWithoutNullStreams {
+
+        const javaRoot = vscode.Uri.joinPath(this.extensionUri, "Ludii Recommender");
+
         const javaPath = [
             'Generation/bin',
             'Common/bin',
@@ -87,22 +90,27 @@ export class JavaController {
             'Core/bin',
             'Core/lib/jfreesvg-3.4.jar',
             'Language/bin',
+            'Evaluation/bin',
+            'AI/bin',
             'Player/bin',
             'Recommender/bin',
-        ].map(module => projectRoot + module).join(':');
-
-        console.log(javaPath)
+            'Manager/bin',
+            'ViewController/bin',
+            'Mining/bin',
+        ].map(module => vscode.Uri.joinPath(javaRoot, module).fsPath).join(':');
     
-        const javaProcess = spawn('java', ['-cp', javaPath, javaClass], {cwd: projectRoot});
+        const javaProcess = spawn('java', ['-cp', javaPath, this.javaClass], {cwd: javaRoot.fsPath});
 
         javaProcess.on('exit', (code, signal) => {
             if (this.keepAlive) {
-                console.log(javaClass + ' exited. with exit code ' + code + ' and signal ' + signal + '. Restarting...');
-                this.javaProcess = this.spawnJavaProcess(javaClass);
+                console.log(this.javaClass + ' exited. with exit code ' + code + ' and signal ' + signal + '. Restarting...');
+                console.log('cd "' + this.extensionUri + '"');
+                console.log('java -cp "' + javaPath + '" ' + this.javaClass);
+                this.javaProcess = this.spawnJavaProcess();
             }
         });
 
-        javaProcess.stdout.once('data', data => console.log(javaClass + ' startup:', data.toString()));
+        javaProcess.stdout.once('data', data => console.log(this.javaClass + ' startup:', data.toString()));
 
         return javaProcess;
     }

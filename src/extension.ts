@@ -6,13 +6,18 @@ import { CompletionViewProvider }from './ui';
 import { DescriptionProvider } from './descriptionProvider';
 
 
-const ludiiCompletionItemProvider = new LudiiAutocomplete();
-
-const codeProvider = new CodeProvider();
-const descriptionProvider = new DescriptionProvider();
+let ludiiCompletionItemProvider: LudiiAutocomplete | undefined;
+let codeProvider: CodeProvider | undefined;
+let descriptionProvider: DescriptionProvider | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('Ludii started');
+
+    console.log(context.extensionUri)
+
+    codeProvider = new CodeProvider(context.extensionUri);
+    descriptionProvider = new DescriptionProvider(context.extensionUri);
+    ludiiCompletionItemProvider = new LudiiAutocomplete(context.extensionUri);
 
     context.subscriptions.push(vscode.languages.registerCompletionItemProvider(
         { language: 'ludii', scheme: 'file' },
@@ -26,14 +31,14 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('ludii.findLegacyCompletions', () => {
-            codeProvider.useLegacyCompiler();
+            codeProvider?.useLegacyCompiler();
 			provider.findCompletions();
 		})
     );
 
     context.subscriptions.push(
         vscode.commands.registerCommand('ludii.findPartialCompletions', () => {
-            codeProvider.usePartialCompiler();
+            codeProvider?.usePartialCompiler();
             provider.findCompletions();
         })
     );

@@ -17,9 +17,11 @@ const examples = [
 ];
 
 export class DescriptionProvider {
-    private recommenderAPI = new JavaController('approaches.symbolic.api.Recommender');
+    private recommenderAPI;
     private apiKey: string = "";
-    constructor () {}
+    constructor (private extensionUri: vscode.Uri) {
+        this.recommenderAPI = new JavaController('approaches.symbolic.api.Recommender', this.extensionUri);
+    }
 
 
     public async streamCompletions(completionHandler: (completions: Completion[]) => void, interrupted: () => boolean): Promise<void> {
