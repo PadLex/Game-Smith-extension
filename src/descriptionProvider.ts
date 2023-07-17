@@ -22,7 +22,7 @@ const test = [
 ];
 
 export class DescriptionProvider {
-    private apiKey: string = "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";
+    private apiKey: string = "";
     constructor () {}
 
 

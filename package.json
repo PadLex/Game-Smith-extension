@@ -54,9 +54,9 @@
     },
     "commands": [
       {
-        "command": "ludii.findCompletions",
+        "command": "ludii.findLegacyCompletions",
         "category": "Ludii",
-        "title": "Find Completions",
+        "title": "Find Completions with Legacy Compiler",
         "icon": "$(run)"
       },
       {
@@ -64,17 +64,28 @@
         "category": "Ludii",
         "title": "Clear Completions",
         "icon": "$(clear-all)"
+      },
+      {
+        "command": "ludii.findPartialCompletions",
+        "category": "Ludii",
+        "title": "Find Completions with Partial Compiler",
+        "icon": "$(beaker)"
       }
     ],
     "menus": {
       "view/title": [
         {
-          "command": "ludii.findCompletions",
+          "command": "ludii.findLegacyCompletions",
           "group": "navigation",
           "when": "view == ludii.completionsView"
         },
         {
           "command": "ludii.clearCompletions",
+          "group": "navigation",
+          "when": "view == ludii.completionsView"
+        },
+        {
+          "command": "ludii.findPartialCompletions",
           "group": "navigation",
           "when": "view == ludii.completionsView"
         }

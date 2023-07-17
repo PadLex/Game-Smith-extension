@@ -104,7 +104,6 @@ class CompletionViewProvider {
             return;
         let compiledBase = await this.codeProvider.compiler.compile(ludii);
         compiledBase.value = "";
-        this.activeCompletion = compiledBase;
         this._view.webview.postMessage({ type: 'setState', completions: [compiledBase], selectedCompletion: compiledBase, active: true });
         this.activeGame = ludii;
         this.activeCompletion = compiledBase;

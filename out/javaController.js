@@ -15,13 +15,13 @@ class JavaController {
     write(text) {
         if (this.lock)
             throw "Can not write bacause the previous read operation is ongoing.";
-        // console.log('\nPROVIDING:', text);
+        console.log('\nPROVIDING:', text);
         this.javaProcess.stdin.write(text.replaceAll('\n', '\\n') + '\n');
     }
     read() {
         if (this.lock)
             throw "Can not read bacause the previous read operation is ongoing.";
-        // console.log('\nREAD QUEUE:', this.readQueue);
+        console.log('\nREAD QUEUE:', this.readQueue);
         const nextNewLine = this.readQueue.indexOf('\n');
         if (nextNewLine > -1) {
             const result = this.readQueue.substring(0, nextNewLine);
@@ -59,6 +59,9 @@ class JavaController {
             this.javaProcess.stdout.on('data', dataHandler);
             this.javaProcess.stderr.on('error', errorHandler);
         });
+    }
+    clearQueue() {
+        this.readQueue = '';
     }
     spawnJavaProcess(javaClass) {
         const projectRoot = '/Users/alex/Documents/Marble/Ludii/';

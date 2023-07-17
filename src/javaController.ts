@@ -15,14 +15,14 @@ export class JavaController {
 
     public write(text: string) {
         if (this.lock) throw "Can not write bacause the previous read operation is ongoing.";
-        // console.log('\nPROVIDING:', text);
+        console.log('\nPROVIDING:', text);
 
         this.javaProcess.stdin.write(text.replaceAll('\n', '\\n') + '\n');
     }
 
     public read(): Promise<string> {
         if (this.lock) throw "Can not read bacause the previous read operation is ongoing.";
-        // console.log('\nREAD QUEUE:', this.readQueue);
+        console.log('\nREAD QUEUE:', this.readQueue);
 
         const nextNewLine = this.readQueue.indexOf('\n');
         if (nextNewLine > -1) {
@@ -71,6 +71,10 @@ export class JavaController {
             this.javaProcess.stdout.on('data', dataHandler);
             this.javaProcess.stderr.on('error', errorHandler);
         });
+    }
+
+    public clearQueue() {
+        this.readQueue = '';
     }
 
     public spawnJavaProcess(javaClass: string): ChildProcessWithoutNullStreams {

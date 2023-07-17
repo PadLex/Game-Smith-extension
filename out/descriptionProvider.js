@@ -20,7 +20,7 @@ const test = [
     "Nine Men's Morris: Played on a board of three concentric squares, with a line bisecting the perimeters of each square on each side, but not extending inside the perimeter of the central square. Play occurs on the intersections of the lines and the corners of the squares. Each player has nine pieces. Play begins with each player placing pieces on empty points. If they make three in a row along the lines, they can remove one of the opponent's pieces. They cannot remove an opponent's piece that is in a three-in-a-row formation unless there are no other options. Once all pieces are placed, players take turns moving pieces one spot to an adjacent point along the lines. If a player makes three in a row, an opponent's piece is removed as in the first phase of the game. Once a player is reduced to three pieces, that player may move to any open space on the board. The game is won when the opponent is reduced to two pieces."
 ];
 class DescriptionProvider {
-    apiKey = "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";
+    apiKey = "";
     constructor() { }
     async streamCompletions(completionHandler, interrupted) {
         let messages = [{ "role": "system", "content": systemMessage }];

@@ -1,28 +1,36 @@
-import { Completion, LudiiCompiler } from "./compiler";
+import { Completion, PartialCompiler, LegacyCompiler, Compiler } from "./compiler";
 const https = require('https');
 import * as vscode from 'vscode';
 
+
 export class CodeProvider {
-    public compiler = new LudiiCompiler();
     public inferenceURL: string = "";
 
-    constructor() {
-        
-    }
+    private legacyCompiler = new LegacyCompiler();
+    private partialCompiler = new PartialCompiler();
+    public compiler: Compiler = this.legacyCompiler;
 
     public async streamCompletions(english: string, ludii: string, completionHandler: (completions: Completion[]) => void, interrupted: () => boolean): Promise<void> {
-        // console.log("English: ", english);
-        // console.log("Ludii: ", ludii);
+        console.log("English: ", english);
+        console.log("Ludii: ", ludii);
+        console.log("Interrupted: ", interrupted());
         if (interrupted()) return;
         
         let completions = await this.findCompletions(english, ludii);
         completionHandler(completions);
 
+        let complete: Completion[] = [];
         while (!interrupted()) {
-            const bestBroken = completions.find(c => !c.compiles);
+            const bestBroken = completions.find(c => !complete.includes(c) && !c.compiles);
             if (bestBroken == undefined) break;
+
             const nextCompletions = await this.findCompletions(english, ludii + bestBroken.value);
-            if (nextCompletions.length == 0) break;
+            console.log("Next completions: ", nextCompletions);
+            if (nextCompletions.length == 0) {
+                complete.push(bestBroken);
+                continue;
+            }
+            
             completions = completions.filter(c => c != bestBroken);
             completions.push(...nextCompletions.map(c => {
                 return {compiles: c.compiles, score: c.score, value: bestBroken.value + c.value}
@@ -30,6 +38,8 @@ export class CodeProvider {
             completions.sort((a, b) => b.score - a.score);
             completionHandler(completions);
         }
+
+        console.log("Final completions: ", completions);
     }
 
     private async findCompletions(english: string, ludii: string): Promise<Completion[]> {
@@ -39,10 +49,10 @@ export class CodeProvider {
         
         let completions: Completion[] = [];
         for (let continuation of inferences) {
-            // console.log("PREDICTION: ", continuation);
-            const completion = await this.compiler.compile(ludii + continuation);
+            console.log("PREDICTION: ", continuation);
+            const completion = await this.compiler.compile(ludii + " " + continuation);
             completion.value = completion.value.substring(ludii.length);
-            // console.log("COMPILED: ", completion);
+            console.log("COMPILED: ", completion);
 
             if (completion.value.length > 0 && completions.find(c => c.value == completion.value) == undefined)
                 completions.push(completion);
@@ -54,14 +64,14 @@ export class CodeProvider {
 
     private async infer(instruction: string, input: string, partial: string): Promise<string[]> {
         if (this.inferenceURL == "")
-            this.inferenceURL = await this.requestInferenceURL();
+            await this.requestInferenceURL();
 
         const url = new URL(this.inferenceURL);
         url.searchParams.append('instruction', instruction);
         url.searchParams.append('input', input);
         url.searchParams.append('partial', partial);
         url.searchParams.append('temperature', "0.5");
-        url.searchParams.append('max_new_tokens', "100");
+        url.searchParams.append('max_new_tokens', "50");
         url.searchParams.append('n', "5");
     
         return new Promise((resolve, reject) => {
@@ -86,8 +96,8 @@ export class CodeProvider {
         });
     }
 
-    async requestInferenceURL(): Promise<string> {
-        return await vscode.window.showInputBox({
+    async requestInferenceURL(): Promise<void> {
+        this.inferenceURL = await vscode.window.showInputBox({
             placeHolder: "Inference URL",
             prompt: "Follow the instruction from the Colab notebook to obtain an inference URL.",
         }) || "";
@@ -97,11 +107,19 @@ export class CodeProvider {
         this.inferenceURL = "";
         await vscode.window.showErrorMessage("Invalid inference URL. Please try again.");
     }
+
+    public useLegacyCompiler(): void {
+        this.compiler = this.legacyCompiler;
+    }
+
+    public usePartialCompiler(): void {
+        this.compiler = this.partialCompiler;
+    }
 }
 
 
 async function fake_infer(instruction: string, input: string, partial: string): Promise<string[]> {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 100));
     const fakes = [
         "(game \"Hex\" (players 2) (equipment { (board (hex Diamond 11)) (piece \"Marker\" Each) (regions P1 {(sites Side NE) (sites Side SW)}) (regions P2 {(sites Side NW) (sites Side SE)})}) (rules (meta (swap)) (play (move Add (to (sites Empty)))) (end (if (is Connected Mover) (result Mover Win)))))",
         "(game \"Hex\" (players 2) (equipment { (board (hex Diamond 11)) (piece \"Marker\" Each)}) (rules (meta (swap)) (play (move Add (to (sites Empty)))) (end (if (is Connected Mover) (result Mover Win)))))",
@@ -110,7 +128,8 @@ async function fake_infer(instruction: string, input: string, partial: string): 
     ]
     // console.log("real:", partial)
     // console.log("fake:", fakes[0])
-    return fakes.map(f => f.substring(partial.length, partial.length+50));
+    partial = compact(partial);
+    return fakes.map(f => compact(f).substring(partial.length, partial.length+50));
 }
 
 // This is just to match the dataset's formatting. Probably should be updated to match the compiler's formatting.
