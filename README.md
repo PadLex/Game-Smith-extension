@@ -1,4 +1,4 @@
-# Ludii
+# Ludii extension for VSCode
 
 ## Features
 
