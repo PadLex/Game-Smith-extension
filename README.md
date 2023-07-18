@@ -25,3 +25,17 @@
  6. Open a .lud file and select the LUDII window
    
     ![Example of ready editor](readme_media/editor.png)
+
+## Usage
+
+### Recommender System
+ 1. Copy and OpenAI API Key (we'll need it in step 3)
+ 2. Create and empty .lud file
+ 3. Click on the green arrow to complete the Recommender Survey. (The UI will freeze for a few seconds when it's done. Try to avoid clicking muliple times)
+ 4. The window will close and soon after you will be prompted to paste the key in a dialogue box.
+ 5. Below the rules for a new game will be streamed in real time. You can copy them into the file and modify them as you see fit. (Note that simpler games will tend to work much better in the following steps)
+
+### Generation
+ 1. Follow the instructions in the [Colab Notebook](https://colab.research.google.com/drive/1HDbWCuMYz_6vZR5-mrAQs0NGNPMUzxtC?usp=sharing) to obtain a public url.
+ 2. Click on the beaker and paste th public URL in the dialogue box. You may also click the green arrow in this step to use the standard compiler instead of the partial compiler. You may want to do this to inspect the raw output of the model and to support definitions. Using the Partial compiler (beaker) will guarantee that compelete completions compile but does not support definitions yet.
+ 3. Bellow many possible completions will start streaming in. You can select any completions to inspect it. As the completions start getting large enough that they compile, they will be evaluated with the evaluation metrics and sorted accordingly.
