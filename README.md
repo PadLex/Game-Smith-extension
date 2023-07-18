@@ -28,7 +28,7 @@
 
 ## Usage
 ### Recommender System
- 1. Copy and OpenAI API Key (we'll need it in step 3)
+ 1. Copy an OpenAI API Key (we'll need it in step 3)
  2. Create and empty `.lud` file
  3. Click on the green arrow to complete the Recommender Survey. (The UI will freeze for a few seconds when it's done. Try to avoid clicking muliple times)
  4. The window will close and soon after you will be prompted to paste the key in a dialogue box.
