@@ -2,10 +2,11 @@
 
 ## Features
 
- * Ludii Compilation and Evaluation
+ * Syntax highlighting 
+ * Compilation and Evaluation
  * Intellisense autocomplete based on the SymbolMapper class
  * English Rule generation using GPT-3.5 and the Recommender System
- * English to Ludii translation based on LLaMa
+ * English to Ludii translation based on fine-tuned LLaMa 7b
 
 ## Requirements
 
