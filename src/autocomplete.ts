@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { JavaController } from './javaController';
 import { getGame } from './utils';
+import { compact } from './codeProvider';
 
 export class LudiiAutocomplete implements vscode.CompletionItemProvider {
     private javaController;
@@ -18,7 +19,7 @@ export class LudiiAutocomplete implements vscode.CompletionItemProvider {
 
             let docText = document.getText(new vscode.Range(new vscode.Position(0, 0), position));
 
-            this.javaController.write(getGame(docText));
+            this.javaController.write(compact(getGame(docText)));
             
             const dataHandler = (text: string) => {
 
