@@ -15,7 +15,7 @@
 * Access to an OpenAI key
 
 ## Installation
- 1. Download the [packaged extension](https://drive.google.com/file/d/1l_D2bjYn0Eqw3eaYgnJOyqlXLIfpsRS3/view?usp=sharing)
+ 1. Download the packaged extension [ludii-0.0.2](https://drive.google.com/file/d/1rIf_Kw13yRVsag28xfBHXrfqneE8OT9A/view?usp=drive_link)
  2. Install the extension by selecting `Extensions/.../Install from VSIX`
    
     ![Intallation example](readme_media/install-vsix.png)
