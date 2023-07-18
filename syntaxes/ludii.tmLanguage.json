@@ -11,10 +11,17 @@
             }
         },
         {
-            "name": "keyword.control.ludii",
-            "match": "\\b(shift|tiling|prev|wedge|moveAgain|score|path|trim|sizes|merge|state|exp|firstMoveOnTrack|centrePoint|pass|\\%|mancalaBoard|\\*|then|\\+|toBool|\\-|/|size|meta|difference|\\!=|\\<|=|>|sub|deal|dimFunction|handSite|baseRangeFunction|endRule|log10|ahead|forAll|hop|roll|renumber|trackSite|result|remember|promote|min|dual|pot|pow|xor|where|flip|seq|\\^|hand|set|Infinity|decision|spiral|column|union|team|intFunction|face|component|abs|flips|topLevel|makeFaces|baseGraphFunction|to|intervene|die|deck|dim|rules|sites|do|operator|bet|div|payoffs|intersection|layers|tile|subgame|shoot|results|add|Undefined|last|count|notEqual|booleanFunction|avoidStoredState|graph|take|piece|celtic|hint|allCombinations|quadhex|End|region|next|string|attract|regionFunction|remove|random|not|sin|concentric|end|recoordinate|vote|nonDecision|ge|enclose|intersect|apply|rotation|start|was|counter|gt|pair|hole|what|mover|gravity|moves|step|append|play|container|regionSite|select|mod|sqrt|games|hex|floatFunction|id|if|between|phase|item|players|byScore|var|hints|is|priority|propose|push|boardless|surakartaBoard|slide|exact|rotations|card|skew|regions|log|range|fromTo|mapEntry|Off|layer|coord|directional|directionFacing|leap|place|surround|map|regular|max|toFloat|payoff|startRule|trigger|site|equals|le|complete|clip|board|pathExtent|rotate|<=|metaRule|cos|lt|pips|dice|intArrayFunction|float|while|mode|edge|split|pin|rangeFunction|playCard|claim|from|sow|domino|tan|all|swap|level|equipment|tri|arrayValue|basis|square|matchScore|forget|expand|directions|effect|keep|rectangle|>=|who|no|note|game|passEnd|mul|values|trackStep|baseDimFunction|scale|automove|can|dominoes|subdivide|graphFunction|array|and|addScore|splitCrossings|repeat|brick|row|track|value|player|direction|move|toInt|amount|or|cost|satisfy|forEach|custodial|match|int|boolean|poly|nextPhase)\\b",
+            "name": "entity.name.tag",
+            "match": "\\b(container|beginWith|stack|value2|counts|cond|turns|path|trim|rank|state|slotsPerSide|if|ifAfterwards|maxState|in|biased|index|odd|thirds|at|trumpRank|noMoveYet|rings|stop|size|bySite|even|unique|applyAfterAllMoves|exact|except|suit|items|rotations|upTo|components|vertices|excepts|numStores|stagger|trumpValue|replayDouble|afterConsequence|result|fromIncluded|coord|min|top|by|throughAny|after|copy|misere|surround|phases|connect|d|max|forward|column|loops|k|store|includeSelf|component|toIncluded|sides|closed|to|combined|faces|numPerHole|through|before|use|num|slotsFrom|numException|sites|inside|suits|trail|whats|withValue|byLevel|loop|from|slotsTo|facesByDie|level|rotns|maxValue|count|numSides|stopIncluded|steps|skipIf|slots|joinCorners|diagonals|contiguous|newRotation|next|distance|origin|maxCount|joinMidpoints|numFaces|cardsBySuit|of|fromTop|row|value|included|startAt|on|player|eachCell|owner|directed|previous|apply|trimEdges|clockwise|rotation|pyramidal|edges|length|with|midpoints|colour|cells|what|backtracking|edgesCurved|step|sowEffect|largeStack)\\:",
             "captures": {
-                "0": { "name": "keyword.control.ludii" }
+                "0": { "name": "entity.name.tag" }
+            }
+        },
+        {
+            "name": "keyword.control.ludii",
+            "match": "\\(\\s*(shift|tiling|prev|wedge|moveAgain|score|path|trim|sizes|merge|state|exp|firstMoveOnTrack|centrePoint|pass|\\%|mancalaBoard|\\*|then|\\+|toBool|\\-|\\/|size|meta|difference|\\!\\=|\\<|\\=|\\>|sub|deal|dimFunction|handSite|baseRangeFunction|endRule|log10|ahead|forAll|hop|roll|renumber|trackSite|result|remember|promote|min|dual|pot|pow|xor|where|flip|seq|\\^|hand|set|Infinity|decision|spiral|column|union|team|intFunction|face|component|abs|flips|topLevel|makeFaces|baseGraphFunction|to|intervene|die|deck|dim|rules|sites|do|operator|bet|div|payoffs|intersection|layers|tile|subgame|shoot|results|add|Undefined|last|count|notEqual|booleanFunction|avoidStoredState|graph|take|piece|celtic|hint|allCombinations|quadhex|End|region|next|string|attract|regionFunction|remove|random|not|sin|concentric|end|recoordinate|vote|nonDecision|ge|enclose|intersect|apply|rotation|start|was|counter|gt|pair|hole|what|mover|gravity|moves|step|append|play|container|regionSite|select|mod|sqrt|games|hex|floatFunction|id|if|between|phase|item|players|byScore|var|hints|is|priority|propose|push|boardless|surakartaBoard|slide|exact|rotations|card|skew|regions|log|range|fromTo|mapEntry|Off|layer|coord|directional|directionFacing|leap|place|surround|map|regular|max|toFloat|payoff|startRule|trigger|site|equals|le|complete|clip|board|pathExtent|rotate|\\<\\=|metaRule|cos|lt|pips|dice|intArrayFunction|float|while|mode|edge|split|pin|rangeFunction|playCard|claim|from|sow|domino|tan|all|swap|level|equipment|tri|arrayValue|basis|square|matchScore|forget|expand|directions|effect|keep|rectangle|\\>\\=|who|no|note|game|passEnd|mul|values|trackStep|baseDimFunction|scale|automove|can|dominoes|subdivide|graphFunction|array|and|addScore|splitCrossings|repeat|brick|row|track|value|player|direction|move|toInt|amount|or|cost|satisfy|forEach|custodial|match|int|boolean|poly|nextPhase)(\\s+|\\))",
+            "captures": {
+                "1": { "name": "keyword.control.ludii" }
             }
         },
         {
@@ -22,6 +29,13 @@
             "match": "\\b\\d+\\b",
             "captures": {
                 "0": { "name": "constant.numeric.ludii" }
+            }
+        },
+        {
+            "name": "constant.language.ludii",
+            "match": "\\b(True|False)\\b",
+            "captures": {
+                "0": { "name": "constant.language.ludii" }
             }
         },
         {
