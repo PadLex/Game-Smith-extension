@@ -13,6 +13,7 @@
 * Java 11
 * Access to an inference server with a V100 GPU or above
 * Access to an OpenAI key
+* An up-to-date version of [VSCode](https://code.visualstudio.com/)
 
 ## Installation
  1. Download the packaged extension [ludii-0.0.2](https://drive.google.com/file/d/1rIf_Kw13yRVsag28xfBHXrfqneE8OT9A/view?usp=drive_link)
