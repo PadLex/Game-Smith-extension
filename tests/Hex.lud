@@ -4,5 +4,5 @@
 
 (game "Hex"     (players 2)   
 
-   (equipment { (board (hex Diamond 11 ) ) (piece "Marker" 
+   (equipment { (board (hex Diamond 11 ) ) (piece "Marker" Each ) 
 

@@ -1,5 +1,9 @@
 {
   "name": "ludii",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PadLex/Ludii-VSCode-extension"
+  },
   "displayName": "Ludii",
   "description": "",
   "version": "0.0.1",
