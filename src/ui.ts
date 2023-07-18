@@ -115,10 +115,8 @@ export class CompletionViewProvider implements vscode.WebviewViewProvider {
 
 		if (english == "" && ludii == "")
 			this.updateDescriptionCompletions(completionId);
-		else if (english != "")
-			this.updateCodeCompletions(english, ludii, completionId);
 		else
-			vscode.window.showErrorMessage("Could not find any English description in the current file.");
+			this.updateCodeCompletions(english, ludii, completionId);
 	}
 
 	async updateDescriptionCompletions(completionId: number) {
@@ -141,6 +139,11 @@ export class CompletionViewProvider implements vscode.WebviewViewProvider {
 
 		if (completionId != this.completionId) return;
 		if (compiledBase.compiles) return;
+
+		if (english == "") {
+			vscode.window.showErrorMessage("Could not find any English description in the current file.");
+			return;
+		}
 		
 		this.codeProvider.streamCompletions(english, ludii,
 			completions => {
