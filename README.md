@@ -2,11 +2,11 @@
 
 ## Features
 
- * Syntax highlighting 
- * Compilation and Evaluation
- * Intellisense autocomplete based on the SymbolMapper class
- * English Rule generation using GPT-3.5 and the Recommender System
- * English to Ludii translation based on fine-tuned LLaMa 7b
+ * Syntax highlighting [[video]](https://youtu.be/7dkNCUYZA40)
+ * Compilation and Evaluation [[video]](https://youtu.be/7dkNCUYZA40?t=82)
+ * Intellisense autocomplete based on the SymbolMapper class [[video]](https://youtu.be/6KmwNtM_idA)
+ * English Rule generation using GPT-3.5 and the Recommender System [[video]]()
+ * English to Ludii translation based on fine-tuned LLaMa 7b [[video]](https://youtu.be/6KmwNtM_idA?t=70)
 
 ## Requirements
 
@@ -16,6 +16,9 @@
 * An up-to-date version of [VSCode](https://code.visualstudio.com/)
 
 ## Installation
+ * [[video demonstration]](https://youtu.be/OBkfunAo27c)
+
+
  1. Download the packaged extension [ludii-0.0.2](https://drive.google.com/file/d/1rIf_Kw13yRVsag28xfBHXrfqneE8OT9A/view?usp=drive_link)
  2. Install the extension by selecting `Extensions/.../Install from VSIX`
    
