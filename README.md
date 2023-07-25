@@ -11,8 +11,8 @@
 ## Requirements
 
 * Java 11
-* Access to an inference server with a V100 GPU or above
-* Access to an OpenAI key
+* Access to a local/cloud instance with a V100 GPU or above. Eg, Goolge Colab premium, Lambda
+* An OpenAI API key
 * An up-to-date version of [VSCode](https://code.visualstudio.com/)
 
 ## Installation
