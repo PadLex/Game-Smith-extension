@@ -20,7 +20,7 @@ export class DescriptionProvider {
     private recommenderAPI;
     private apiKey: string = "";
     constructor (private extensionUri: vscode.Uri) {
-        this.recommenderAPI = new JavaController('approaches.symbolic.api.Recommender', this.extensionUri);
+        this.recommenderAPI = new JavaController('approaches.symbolic.api.RecommenderEndpoint', this.extensionUri);
     }
 
 

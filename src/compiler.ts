@@ -12,7 +12,7 @@ export class PartialCompiler implements Compiler {
     private javaController;
 
     public constructor(private extensionUri: vscode.Uri) {
-        this.javaController = new JavaController('approaches.symbolic.api.PartialCompile', extensionUri);
+        this.javaController = new JavaController('approaches.symbolic.api.FractionalCompilerEndpoint', extensionUri);
     }
 
     public async compile(ludii: string): Promise<Completion> {
@@ -24,9 +24,10 @@ export class PartialCompiler implements Compiler {
         let score: number;
         let compilableSection: string;
 
-        compiles = parseInt(await this.javaController.read()) == 1;
-        score = parseFloat(await this.javaController.read());
-        compilableSection = await this.javaController.read();
+        const response = (await this.javaController.read()).split('|');
+        compiles = parseInt(response[0]) == 1;
+        score = parseFloat(response[1]);
+        compilableSection = response[2];
 
         // console.log("Compiles: ", compiles);
         // console.log("Score: ", score);
@@ -41,7 +42,7 @@ export class LegacyCompiler implements Compiler {
     private javaController;
 
     public constructor(private extensionUri: vscode.Uri) {
-        this.javaController = new JavaController('approaches.symbolic.api.LegacyCompile', extensionUri);
+        this.javaController = new JavaController('approaches.symbolic.api.LegacyCompilerEndpoint', extensionUri);
     }
 
     public async compile(ludii: string): Promise<Completion> {
@@ -52,8 +53,9 @@ export class LegacyCompiler implements Compiler {
         let compiles: boolean;
         let score: number;
 
-        compiles = (await this.javaController.read()).trim() == "1";
-        score = parseFloat(await this.javaController.read()) || 0;
+        const response = (await this.javaController.read()).split('|');
+        compiles = response[0].trim() == "1";
+        score = compiles? parseFloat(response[1]) || 0 : 0;
         this.javaController.clearQueue();
 
         console.log("Compiles: ", compiles);

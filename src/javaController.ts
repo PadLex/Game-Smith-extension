@@ -98,6 +98,8 @@ export class JavaController {
             'ViewController/bin',
             'Mining/bin',
         ].map(module => vscode.Uri.joinPath(javaRoot, module).fsPath).join(':');
+
+        console.log( javaPath );
     
         const javaProcess = spawn('java', ['-cp', javaPath, this.javaClass], {cwd: javaRoot.fsPath});
 

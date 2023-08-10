@@ -7,7 +7,7 @@ export class LudiiAutocomplete implements vscode.CompletionItemProvider {
     private javaController;
 
     public constructor(private extensionUri: vscode.Uri) {
-        this.javaController = new JavaController('approaches.symbolic.api.Autocomplete', extensionUri);
+        this.javaController = new JavaController('approaches.symbolic.api.AutocompleteEndpoint', extensionUri);
     }
 
     public provideCompletionItems(
@@ -17,23 +17,32 @@ export class LudiiAutocomplete implements vscode.CompletionItemProvider {
         return new Promise((resolve, reject) => {
             let completionItems: vscode.CompletionItem[] = [];
 
-            let docText = document.getText(new vscode.Range(new vscode.Position(0, 0), position));
+            const docText = document.getText(new vscode.Range(new vscode.Position(0, 0), position));
+            const game = compact(getGame(docText));
 
-            this.javaController.write(compact(getGame(docText)));
+            // Necessary bacuse intellisense will match completion untill the previous space or braket, as if they where continuations of the word
+            let prefix = "";
+            if (!docText.endsWith(" ") && !docText.endsWith("\n")) {
+                prefix = game.substring(game.lastIndexOf(" ")).trim();
+                prefix = prefix.replaceAll("\(", "").replaceAll("\{", "");
+            }
+
+            
+
+            this.javaController.write(game);
             
             const dataHandler = (text: string) => {
-
-                text = text.substring(0, text.length - 2);
                 const completions = text.split('||');
                 
                 completions.forEach((completion: string) => {
                     const [label, detail] = completion.split('|');
                     console.log(completion, "->", label, "&", detail);
-                    const item = new vscode.CompletionItem(label);
-                    item.detail = detail;
+                    const item = new vscode.CompletionItem(prefix + label);
+                    //item.detail = detail;
                     completionItems.push(item);
                 });
 
+                
                 resolve(completionItems);
             };
 
