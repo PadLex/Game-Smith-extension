@@ -24,7 +24,9 @@ export class LudiiAutocomplete implements vscode.CompletionItemProvider {
             let prefix = "";
             if (!docText.endsWith(" ") && !docText.endsWith("\n")) {
                 prefix = game.substring(game.lastIndexOf(" ")).trim();
-                prefix = prefix.replaceAll("\(", "").replaceAll("\{", "");
+                const lastBraket = Math.max(prefix.lastIndexOf("("), prefix.lastIndexOf(")"), prefix.lastIndexOf("{"), prefix.lastIndexOf("}"));
+                if (lastBraket > -1)
+                    prefix = prefix.substring(lastBraket + 1);
             }
 
             

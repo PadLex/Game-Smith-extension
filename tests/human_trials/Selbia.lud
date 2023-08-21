@@ -1,0 +1,2 @@
+//Selbia: 3x3 intersecting lines with diagonals in the square. Three pieces per player. Players alternate turns placing a piece on the board. The player who places three pieces in a row along one of the lines of the board wins.
+(game 

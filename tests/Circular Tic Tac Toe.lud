@@ -1,1 +1,2 @@
 // Circular Tic Tac Toe: Played in a set of 3 concentric rings. First player to get 3 in a row wins.
+(game "Circular Tic Tac Toe" (players 2) (equipment { (board (concentric Square rings:3)) (piece "Marker" P1) (piece "Marker" P2)}) (rules (play (move Add (to (sites Empty)))) (end (if (is Line 4) (result Mover Win)))))

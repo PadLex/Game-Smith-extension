@@ -1,0 +1,1 @@
+//3x3 intersecting lines with diagonals. Three pieces per player. Players alternate turns placing a piece on an empty spot on the board. When a player succeeds in making a line of three with their pieces, they win.

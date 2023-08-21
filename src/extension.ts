@@ -4,6 +4,7 @@ import { LudiiAutocomplete } from './autocomplete';
 import { CodeProvider } from './codeProvider';
 import { CompletionViewProvider }from './ui';
 import { DescriptionProvider } from './descriptionProvider';
+import { startGame } from './play';
 
 
 let ludiiCompletionItemProvider: LudiiAutocomplete | undefined;
@@ -46,6 +47,14 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand('ludii.clearCompletions', () => {
 			provider.clearCompletions();
+		})
+    );
+
+    context.subscriptions.push(
+		vscode.commands.registerCommand('ludii.startDesktopApp', () => {
+            if (vscode.window.activeTextEditor) {
+                startGame(context.extensionUri, vscode.window.activeTextEditor.document.uri)
+            }
 		})
     );
 }

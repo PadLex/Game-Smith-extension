@@ -61,7 +61,7 @@
         "command": "ludii.findLegacyCompletions",
         "category": "Ludii",
         "title": "Find Completions with Legacy Compiler",
-        "icon": "$(run)"
+        "icon": "$(debug)"
       },
       {
         "command": "ludii.clearCompletions",
@@ -73,7 +73,13 @@
         "command": "ludii.findPartialCompletions",
         "category": "Ludii",
         "title": "Find Completions with Partial Compiler",
-        "icon": "$(beaker)"
+        "icon": "$(search)"
+      },
+      {
+        "command": "ludii.startDesktopApp",
+        "category": "Ludii",
+        "title": "Run the game in the Ludii Desktop App",
+        "icon": "$(run)"
       }
     ],
     "menus": {
@@ -90,6 +96,11 @@
         },
         {
           "command": "ludii.findPartialCompletions",
+          "group": "navigation",
+          "when": "view == ludii.completionsView"
+        },
+        {
+          "command": "ludii.startDesktopApp",
           "group": "navigation",
           "when": "view == ludii.completionsView"
         }

@@ -16,7 +16,7 @@ export class PartialCompiler implements Compiler {
     }
 
     public async compile(ludii: string): Promise<Completion> {
-        // console.log("\nCompiling: ", ludii);
+        console.log("\nCompiling:", ludii);
         
         this.javaController.write(ludii);
 
@@ -24,10 +24,13 @@ export class PartialCompiler implements Compiler {
         let score: number;
         let compilableSection: string;
 
-        const response = (await this.javaController.read()).split('|');
-        compiles = parseInt(response[0]) == 1;
-        score = parseFloat(response[1]);
-        compilableSection = response[2];
+        const response = await this.javaController.read();
+        // console.log("response: ", response);
+
+        const items = response.split('|');
+        compiles = parseInt(items[0]) == 1;
+        score = parseFloat(items[1]);
+        compilableSection = items[2];
 
         // console.log("Compiles: ", compiles);
         // console.log("Score: ", score);

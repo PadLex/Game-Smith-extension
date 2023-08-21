@@ -112,6 +112,8 @@ export class CompletionViewProvider implements vscode.WebviewViewProvider {
 
 		const english = getComments(text);
 		const ludii = getGame(text);
+		console.log("UI English:" + english);
+		console.log("UI Ludii:" + ludii);
 
 		if (english == "" && ludii == "")
 			this.updateDescriptionCompletions(completionId);

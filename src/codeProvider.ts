@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 
 
 export class CodeProvider {
-    public inferenceURL: string = "";
+    public inferenceURL: string = "https://a526-35-221-175-98.ngrok.io";
 
     private legacyCompiler;
     private partialCompiler;
@@ -17,8 +17,8 @@ export class CodeProvider {
     }
 
     public async streamCompletions(english: string, ludii: string, completionHandler: (completions: Completion[]) => void, interrupted: () => boolean): Promise<void> {
-        console.log("English: ", english);
-        console.log("Ludii: ", ludii);
+        console.log("Stream English:", english);
+        console.log("Stream Ludii:", ludii);
         console.log("Interrupted: ", interrupted());
         if (interrupted()) return;
         
