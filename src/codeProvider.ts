@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 
 
 export class CodeProvider {
-    public inferenceURL: string = "https://a526-35-221-175-98.ngrok.io";
+    public inferenceURL: string = "https://944f-35-204-195-223.ngrok.io";
 
     private legacyCompiler;
     private partialCompiler;

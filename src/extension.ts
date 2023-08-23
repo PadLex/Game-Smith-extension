@@ -5,6 +5,7 @@ import { CodeProvider } from './codeProvider';
 import { CompletionViewProvider }from './ui';
 import { DescriptionProvider } from './descriptionProvider';
 import { startGame } from './play';
+import { subscribeExperiment } from './experiment';
 
 
 let ludiiCompletionItemProvider: LudiiAutocomplete | undefined;
@@ -53,12 +54,18 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
 		vscode.commands.registerCommand('ludii.startDesktopApp', () => {
             if (vscode.window.activeTextEditor) {
+                vscode.window.activeTextEditor.document.save();
                 startGame(context.extensionUri, vscode.window.activeTextEditor.document.uri)
             }
 		})
     );
+
+
+    subscribeExperiment(context);
+    
 }
 
 export function deactivate() {
     disposeControllers();
 }
+

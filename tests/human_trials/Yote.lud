@@ -1,2 +1,0 @@
-// Yote: 5x5 board. Twelve pieces per player. Players alternate turns placing a piece on the board or moving a piece already on the board. Pieces move one space in any orthogonal direction. A player may capture an opponent's piece by hopping over it to an empty space on the other side of it. When a capture is made in this fashion, the player chooses another piece belonging to the opponent to capture in addition. The player who captures all of the opponent's pieces wins.
-(game
