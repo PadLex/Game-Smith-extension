@@ -7,6 +7,10 @@ import { DescriptionProvider } from './descriptionProvider';
 import { startGame } from './play';
 import { subscribeExperiment } from './experiment';
 
+/**
+ * This file is the entry point for the extension. It maps VSCode events to their corresponding implementations across the codebase.
+ */
+
 
 let ludiiCompletionItemProvider: LudiiAutocomplete | undefined;
 let codeProvider: CodeProvider | undefined;
