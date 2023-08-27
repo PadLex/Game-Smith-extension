@@ -1,6 +1,6 @@
 
 import { getGame } from './utils';
-import { compact } from './codeProvider';
+import { compact } from './longCompletions';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';

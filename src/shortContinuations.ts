@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { JavaController } from './javaController';
 import { getGame } from './utils';
-import { compact } from './codeProvider';
+import { compact } from './longCompletions';
 
 export class LudiiAutocomplete implements vscode.CompletionItemProvider {
     private javaController;

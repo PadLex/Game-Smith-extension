@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { disposeControllers } from './javaController';
-import { LudiiAutocomplete } from './autocomplete';
-import { CodeProvider } from './codeProvider';
+import { LudiiAutocomplete } from './shortContinuations';
+import { CodeProvider } from './longCompletions';
 import { CompletionViewProvider }from './ui';
-import { DescriptionProvider } from './descriptionProvider';
+import { DescriptionProvider } from './englishDescriptions';
 import { startGame } from './play';
 import { subscribeExperiment } from './experiment';
 

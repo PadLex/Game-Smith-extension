@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { CodeProvider, compact } from './codeProvider';
-import { DescriptionProvider } from './descriptionProvider';
+import { CodeProvider, compact } from './longCompletions';
+import { DescriptionProvider } from './englishDescriptions';
 import { getGame, getComments } from './utils';
 import { Completion } from './compiler';
 

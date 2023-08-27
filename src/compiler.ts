@@ -45,7 +45,7 @@ export class LegacyCompiler implements Compiler {
     private javaController;
 
     public constructor(private extensionUri: vscode.Uri) {
-        this.javaController = new JavaController('approaches.symbolic.api.LegacyCompilerEndpoint', extensionUri);
+        this.javaController = new JavaController('approaches.symbolic.api.ConventionalCompilerEndpoint', extensionUri);
     }
 
     public async compile(ludii: string): Promise<Completion> {
