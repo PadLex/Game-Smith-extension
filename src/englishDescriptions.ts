@@ -33,8 +33,6 @@ export class DescriptionProvider {
         this.recommenderAPI.write(""); // launch the recommender 
         messages.push({"role": "user", "content": await this.recommenderAPI.read()});
 
-        //messages = [{"role": "system", "content": "You are a helpful assistant."}, {role: "user", content: "Hello world"}];
-
         const data = JSON.stringify({"model": "gpt-3.5-turbo", "messages": messages, "stream": true});
 
         if (!this.apiKey)
@@ -83,7 +81,6 @@ export class DescriptionProvider {
     
         req.write(data);
         req.end();
-        
     }
 }
 

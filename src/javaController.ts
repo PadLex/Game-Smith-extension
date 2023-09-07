@@ -37,7 +37,6 @@ export class JavaController {
             let result = this.readQueue;
 
             const dataHandler = (data: Buffer) => {
-                // console.log('PARTIAL:', data.toString());
                 const dataString = data.toString();
                 
                 const nextNewLine = dataString.indexOf('\n');

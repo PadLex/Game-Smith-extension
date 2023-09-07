@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 
 
 export class CodeProvider {
-    public inferenceURL: string = "https://f401-34-91-166-235.ngrok.io";
+    public inferenceURL: URL|null = null;
 
     private legacyCompiler;
     private partialCompiler;
@@ -31,7 +31,6 @@ export class CodeProvider {
             if (bestBroken == undefined) break;
 
             const nextCompletions = await this.findCompletions(english, ludii + bestBroken.value);
-            console.log("Next completions: ", nextCompletions);
             if (nextCompletions.length == 0) {
                 complete.push(bestBroken);
                 continue;
@@ -45,20 +44,15 @@ export class CodeProvider {
             completionHandler(completions);
         }
 
-        console.log("Final completions: ", completions);
     }
 
     private async findCompletions(english: string, ludii: string): Promise<Completion[]> {
         const inferences = await this.infer("Construct a Ludii game based on the following description", english, legacy_compact(ludii));
-
-        console.log("INFERENCES: ", inferences);
         
         let completions: Completion[] = [];
         for (let continuation of inferences) {
-            console.log("PREDICTION: ", continuation);
             const completion = await this.compiler.compile(ludii + " " + continuation);
             completion.value = completion.value.substring(ludii.length);
-            console.log("COMPILED: ", completion);
 
             if (completion.value.length > 0 && completions.find(c => c.value == completion.value) == undefined)
                 completions.push(completion);
@@ -69,48 +63,73 @@ export class CodeProvider {
     }
 
     private async infer(instruction: string, input: string, partial: string): Promise<string[]> {
-        if (this.inferenceURL == "")
+        if (this.inferenceURL == null)
             await this.requestInferenceURL();
-
-        const url = new URL(this.inferenceURL);
+        
+        const url = this.inferenceURL as URL;
         url.searchParams.append('instruction', instruction);
         url.searchParams.append('input', input);
         url.searchParams.append('partial', partial);
         url.searchParams.append('temperature', "0.5");
         url.searchParams.append('max_new_tokens', "50");
         url.searchParams.append('n', "4");
+
+        console.log("Inference URL:", url.href)
+
+        let good = false;
     
         return new Promise((resolve, reject) => {
-            https.get(url.href, (res: any) => {
+            const request = https.get(url.href, (res: any) => {
                 let data = '';
     
                 // A chunk of data has been received.
                 res.on('data', (chunk: Buffer) => {
                     data += chunk;
+                    if (!data.includes("ERR_NGROK")) {
+                        good = true;
+                    }
                 });
     
                 // The whole response has been received.
                 res.on('end', () => {
                     resolve(JSON.parse(data).completions);
                 });
-    
-            }).on("error", (err: Error) => {
-                console.log("Error: " + err.message);
-                this.badURL();
-                reject(err);
             });
+            
+            request.on("error", async (err: Error) => {
+                console.log("Error: " + err.message);
+                await this.badURL();
+                resolve([]);
+            });
+
+            setTimeout(() => {
+                console.log("time " + good);
+                if (!good) {
+                    console.log("Timeout");
+                    request.abort();
+                    this.badURL();
+                    resolve([]);
+                }
+            }, 5000);
         });
     }
 
     async requestInferenceURL(): Promise<void> {
-        this.inferenceURL = await vscode.window.showInputBox({
-            placeHolder: "Inference URL",
-            prompt: "Follow the instruction from the Colab notebook to obtain an inference URL.",
-        }) || "";
+        while (this.inferenceURL == null) {
+            try {
+                this.inferenceURL = new URL(await vscode.window.showInputBox({
+                    placeHolder: "Inference URL",
+                    prompt: "Follow the instruction from the Colab notebook to obtain an inference URL.",
+                }) || "");
+            } catch (e) {
+                await this.badURL();
+            }
+        }
+        
     }
 
     async badURL(): Promise<void> {
-        this.inferenceURL = "";
+        this.inferenceURL = null;
         await vscode.window.showErrorMessage("Invalid inference URL. Please try again.");
     }
 
@@ -121,21 +140,6 @@ export class CodeProvider {
     public usePartialCompiler(): void {
         this.compiler = this.partialCompiler;
     }
-}
-
-
-async function fake_infer(instruction: string, input: string, partial: string): Promise<string[]> {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    const fakes = [
-        "(game \"Hex\" (players 2) (equipment { (board (hex Diamond 11)) (piece \"Marker\" Each) (regions P1 {(sites Side NE) (sites Side SW)}) (regions P2 {(sites Side NW) (sites Side SE)})}) (rules (meta (swap)) (play (move Add (to (sites Empty)))) (end (if (is Connected Mover) (result Mover Win)))))",
-        "(game \"Hex\" (players 2) (equipment { (board (hex Diamond 11)) (piece \"Marker\" Each)}) (rules (meta (swap)) (play (move Add (to (sites Empty)))) (end (if (is Connected Mover) (result Mover Win)))))",
-        "(game \"Hex\" (players 2) (equipment { (board (hex Diamond 11)) (piece \"Marker\" Each) (regions P1 {(sites Side NE) (sites Side SW)}) (regions P2 {(sites Side NW) (sites Side SE)})}) (rules (meta (swap)) (play (move Add (to (sites Fulll)))) (end (if (is Connected Mover) (result Mover Win)))))",
-        "(game \"Hex\" (players 2) (equipment { (board (hex Diamond 11)) (piece \"Marker\" Each) (regions P1 {(sites Side NE) (sites Side SW)}) (regions P2 {(sites Side NW) (sites Side SE)})}) (rules (play (move Add (to (sites Empty)))) (end (if (is Connected Mover) (result Mover Win)))))",
-    ]
-    // console.log("real:", partial)
-    // console.log("fake:", fakes[0])
-    partial = compact(partial);
-    return fakes.map(f => compact(f).substring(partial.length, partial.length+50));
 }
 
 // This is just to match the dataset's formatting. Probably should be updated to match the compiler's formatting.

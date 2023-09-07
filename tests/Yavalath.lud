@@ -1,0 +1,2 @@
+//Yavalath is played on a hexagonal board with 5 hexes per side. Two players alternate placing pieces, with the goal to form a line of four of their own pieces to win; however, forming a line of three without it leading to a win results in an instant loss.
+(game "Yavalath" (players 2) (equipment {(board (hex 5)) (piece "Marker" Each)}) (rules (play (move Add (to (sites Empty)))) (end {(if (is Line 4) (result Mover Win)) (if (is Line 3) (result Mover Loss))})))
