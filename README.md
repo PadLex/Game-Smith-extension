@@ -19,7 +19,7 @@
  * [[video demonstration]](https://youtu.be/OBkfunAo27c)
 
 
- 1. Download the packaged extension [ludii-0.0.3](https://drive.google.com/file/d/1rIf_Kw13yRVsag28xfBHXrfqneE8OT9A/view?usp=drive_link)
+ 1. Download the packaged extension [ludii-0.0.3](https://drive.google.com/file/d/1tmkkueHyTKZw-MxVlnOF36C5twAGzfFD/view?usp=sharing)
  2. Install the extension by selecting `Extensions/.../Install from VSIX`
    
     ![Intallation example](readme_media/install-vsix.png)
